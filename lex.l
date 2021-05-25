@@ -1,55 +1,49 @@
 %{
 #include <math.h>
-#include "yacc.tab.h"
-}%
+#include <string>
+#include "AST.h"
+#include "parser.hpp"
+extern int yylex();
+%}
 
 %%
-\+ {return ADD;}
-\- {return SUB;}
-\* {return MUL;}
-/ {return DIV;}
-\^ {return POW}
 
-return {
-    return RETURN;
-}
+[ \t\n] ;
 
-while {
-    return WHILE;
-}
+"(" {return LEFTP;}
+")" {return RIGHTP;}
+"{" {return LEFTB;}
+"}" {return RIGHTB;}
+"," {return COMMA;}
+";" {return SEMICOLON;}
 
-for {
-    return FOR;
-}
+"=" {return ASSIGN;}
+"+" {return ADD;}
+"-" {return SUB;}
+"*" {return MUL;}
+"/" {return DIV;}
+"^" {return POW;}
+">" {return GT;}
+"<" {return LT;}
+"==" {return EQ;}
+"<>" {return NEQ;}
 
-if {
-    return IF;
-}
 
-else {
-    return ELSE;
-}
+"Float" {return FLOAT;}
+"Int" {return INT;}
+"Bool" {return BOOL;}
 
-(_ | [a-zA-Z])[_a-zA-Z0-9]* {
-    return NAME;
-}
+"main" {return MAIN;}
+"return" {return RETURN;}
+"while" {return WHILE;}
+"for" {return FOR;}
+"if" {return IF;}
+"else" {return ELSE;}
 
-Void | Int | Float | String | Char {
-    return BASICTYPE;
-}
+[_a-zA-Z]+[_a-zA-Z0-9]* {return IDENTIFIER;}
 
-\* {
-    return ADDRSTAR;
-}
+-?(0|[1-9][0-9]*) {return INTEGER_VALUE;}
 
--?(0|[1-9][0-9]*) {
-    yylval.val = atoi(yytext);
-    return INTEGER;
-}
-
-[0-9]+|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)? {
-	yylval.val = atof(yytext);
-	return FLOAT;
-}
+[0-9]+|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)? {return FLOAT_VALUE;}
 
 %%
