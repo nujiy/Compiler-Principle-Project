@@ -69,22 +69,20 @@
 /* First part of user prologue.  */
 #line 1 "yacc.y"
 
-#include "AST.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
 #include <string>
+#include "AST.h"
+#include "FlexLexer.h"
 using namespace std;
 
 AST* program; // total program
 
-extern int yyparse();
-extern int yylex();
 int yyerror(const char* s);
-int yywrap();
 
-#line 88 "parser.cpp"
+#line 87 "parser.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -540,11 +538,11 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    68,    68,    71,    74,    75,    78,    80,    82,    83,
-      86,    89,    90,    93,    94,    97,   100,   101,   104,   105,
-     108,   109,   110,   113,   114,   117,   120,   121,   122,   123,
-     126,   127,   130,   131,   134,   137,   140,   141,   144,   145,
-     148,   149,   150,   153,   154,   155,   156,   159,   160,   161
+       0,    67,    67,    70,    73,    74,    77,    79,    81,    82,
+      85,    88,    89,    92,    93,    96,    99,   100,   103,   104,
+     107,   108,   109,   112,   113,   116,   119,   120,   121,   122,
+     125,   126,   129,   130,   133,   136,   139,   140,   143,   144,
+     147,   148,   149,   152,   153,   154,   155,   158,   159,   160
 };
 #endif
 
@@ -930,7 +928,7 @@ int yynerrs;
 `----------*/
 
 int
-yyparse (void)
+yyparse (yyFlexLexer* yyflex)
 {
     yy_state_fast_t yystate = 0;
     /* Number of tokens to shift before error messages enabled.  */
@@ -1082,7 +1080,7 @@ yybackup:
   if (yychar == YYEMPTY)
     {
       YYDPRINTF ((stderr, "Reading a token\n"));
-      yychar = yylex ();
+      yychar = yyflex->yylex ();
     }
 
   if (yychar <= YYEOF)
@@ -1170,295 +1168,295 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: global main_block function  */
-#line 68 "yacc.y"
+#line 67 "yacc.y"
                                     {program = new AST((yyvsp[-2].block),(yyvsp[-1].block),(yyvsp[0].block));}
-#line 1176 "parser.cpp"
+#line 1175 "parser.cpp"
     break;
 
   case 3: /* global: decl_list  */
-#line 71 "yacc.y"
+#line 70 "yacc.y"
                    {(yyval.block) = new GlobalPart((yyvsp[0].declList));}
-#line 1182 "parser.cpp"
+#line 1181 "parser.cpp"
     break;
 
   case 4: /* decl_list: decl_list global_item SEMICOLON  */
-#line 74 "yacc.y"
+#line 73 "yacc.y"
                                            {(yyval.declList)->addDecl((yyvsp[-1].declaration)); (yyval.declList) = (yyvsp[-2].declList);}
-#line 1188 "parser.cpp"
+#line 1187 "parser.cpp"
     break;
 
   case 5: /* decl_list: %empty  */
-#line 75 "yacc.y"
+#line 74 "yacc.y"
                           {(yyval.declList) = new DeclList();}
-#line 1194 "parser.cpp"
+#line 1193 "parser.cpp"
     break;
 
   case 6: /* main_block: MAIN LEFTP RIGHTP function_body  */
-#line 78 "yacc.y"
+#line 77 "yacc.y"
                                             {(yyval.block) = new MainPart((yyvsp[0].funcbody));}
-#line 1200 "parser.cpp"
+#line 1199 "parser.cpp"
     break;
 
   case 7: /* function: function_list  */
-#line 80 "yacc.y"
+#line 79 "yacc.y"
                         {(yyval.block) = new FuncPart((yyvsp[0].funcList));}
-#line 1206 "parser.cpp"
+#line 1205 "parser.cpp"
     break;
 
   case 8: /* function_list: function_list function_impl  */
-#line 82 "yacc.y"
+#line 81 "yacc.y"
                                            {(yyvsp[-1].funcList)->addFunction((yyvsp[0].funcImpl)); (yyval.funcList) = (yyvsp[-1].funcList);}
-#line 1212 "parser.cpp"
+#line 1211 "parser.cpp"
     break;
 
   case 9: /* function_list: %empty  */
-#line 83 "yacc.y"
+#line 82 "yacc.y"
                   {(yyval.funcList) = new FuncList();}
-#line 1218 "parser.cpp"
+#line 1217 "parser.cpp"
     break;
 
   case 10: /* function_impl: protoType function_body  */
-#line 86 "yacc.y"
+#line 85 "yacc.y"
                                        {(yyval.funcImpl) = new FuncImpl((yyvsp[-1].declaration),(yyvsp[0].funcbody));}
-#line 1224 "parser.cpp"
+#line 1223 "parser.cpp"
     break;
 
   case 11: /* global_item: variable_decl  */
-#line 89 "yacc.y"
+#line 88 "yacc.y"
                            {(yyval.declaration) = (yyvsp[0].declaration);}
-#line 1230 "parser.cpp"
+#line 1229 "parser.cpp"
     break;
 
   case 12: /* global_item: protoType  */
-#line 90 "yacc.y"
+#line 89 "yacc.y"
                                   {(yyval.declaration) = (yyvsp[0].declaration);}
-#line 1236 "parser.cpp"
+#line 1235 "parser.cpp"
     break;
 
   case 13: /* variable_decl: type IDENTIFIER  */
-#line 93 "yacc.y"
+#line 92 "yacc.y"
                                 {(yyval.declaration) = new VariableDecl((yyvsp[-1].dataType),(yyvsp[0].expr));}
-#line 1242 "parser.cpp"
+#line 1241 "parser.cpp"
     break;
 
   case 14: /* variable_decl: type IDENTIFIER value  */
-#line 94 "yacc.y"
+#line 93 "yacc.y"
                                         {(yyval.declaration) = new VariableDecl((yyvsp[-2].dataType),(yyvsp[-1].expr),(yyvsp[0].expr));}
-#line 1248 "parser.cpp"
+#line 1247 "parser.cpp"
     break;
 
   case 15: /* protoType: type IDENTIFIER LEFTP parameter_decl RIGHTP  */
-#line 97 "yacc.y"
+#line 96 "yacc.y"
                                                        {(yyval.declaration) = new ProtoType((yyvsp[-4].dataType),(yyvsp[-3].expr),(yyvsp[-1].paramList));}
-#line 1254 "parser.cpp"
+#line 1253 "parser.cpp"
     break;
 
   case 16: /* parameter_decl: parameters variable_decl  */
-#line 100 "yacc.y"
+#line 99 "yacc.y"
                                          {(yyval.paramList) = new ParamsList(*(yyvsp[-1].declVector)); (yyval.paramList)->addParam((yyvsp[0].declaration));}
-#line 1260 "parser.cpp"
+#line 1259 "parser.cpp"
     break;
 
   case 17: /* parameter_decl: %empty  */
-#line 101 "yacc.y"
+#line 100 "yacc.y"
                   {(yyval.paramList) = new ParamsList();}
-#line 1266 "parser.cpp"
+#line 1265 "parser.cpp"
     break;
 
   case 18: /* parameters: parameters variable_decl COMMA  */
-#line 104 "yacc.y"
+#line 103 "yacc.y"
                                            {(yyvsp[-2].declVector)->push_back((yyvsp[-1].declaration)); (yyval.declVector) = (yyvsp[-2].declVector);}
-#line 1272 "parser.cpp"
+#line 1271 "parser.cpp"
     break;
 
   case 19: /* parameters: %empty  */
-#line 105 "yacc.y"
+#line 104 "yacc.y"
                   {(yyval.declVector) = new vector<Decl*>();}
-#line 1278 "parser.cpp"
+#line 1277 "parser.cpp"
     break;
 
   case 20: /* type: INT  */
-#line 108 "yacc.y"
-          {(yyval.dataType) = new DataType((yyvsp[0].txt));}
-#line 1284 "parser.cpp"
+#line 107 "yacc.y"
+          {(yyval.dataType) = TYPEINT;}
+#line 1283 "parser.cpp"
     break;
 
   case 21: /* type: FLOAT  */
-#line 109 "yacc.y"
-                {(yyval.dataType) = new DataType((yyvsp[0].txt));}
-#line 1290 "parser.cpp"
+#line 108 "yacc.y"
+                {(yyval.dataType) = TYPEFLOAT;}
+#line 1289 "parser.cpp"
     break;
 
   case 22: /* type: BOOL  */
-#line 110 "yacc.y"
-               {(yyval.dataType) = new DataType((yyvsp[0].txt));}
-#line 1296 "parser.cpp"
+#line 109 "yacc.y"
+               {(yyval.dataType) = TYPECHAR;}
+#line 1295 "parser.cpp"
     break;
 
   case 23: /* value: INTEGER_VALUE  */
-#line 113 "yacc.y"
+#line 112 "yacc.y"
                      {(yyval.expr) = new Integer(atoi((yyvsp[0].txt)));}
-#line 1302 "parser.cpp"
+#line 1301 "parser.cpp"
     break;
 
   case 24: /* value: FLOAT_VALUE  */
-#line 114 "yacc.y"
+#line 113 "yacc.y"
                       {(yyval.expr) = new Float(atof((yyvsp[0].txt)));}
-#line 1308 "parser.cpp"
+#line 1307 "parser.cpp"
     break;
 
   case 25: /* function_body: LEFTB stmt_list stmt_return RIGHTB  */
-#line 117 "yacc.y"
+#line 116 "yacc.y"
                                                    {(yyval.funcbody) = new FuncBody((yyvsp[-2].stmtList),(yyvsp[-1].stmt));}
-#line 1314 "parser.cpp"
+#line 1313 "parser.cpp"
     break;
 
   case 26: /* stmt_return: RETURN value SEMICOLON  */
-#line 120 "yacc.y"
+#line 119 "yacc.y"
                                     {(yyval.stmt) = (yyvsp[-1].expr);}
-#line 1320 "parser.cpp"
+#line 1319 "parser.cpp"
     break;
 
   case 27: /* stmt_return: RETURN SEMICOLON  */
-#line 121 "yacc.y"
+#line 120 "yacc.y"
                                    {(yyval.stmt) = new Void();}
-#line 1326 "parser.cpp"
+#line 1325 "parser.cpp"
     break;
 
   case 28: /* stmt_return: SEMICOLON  */
-#line 122 "yacc.y"
+#line 121 "yacc.y"
                             {(yyval.stmt) = new Void();}
-#line 1332 "parser.cpp"
+#line 1331 "parser.cpp"
     break;
 
   case 29: /* stmt_return: %empty  */
-#line 123 "yacc.y"
+#line 122 "yacc.y"
                   {(yyval.stmt) = new Void();}
-#line 1338 "parser.cpp"
+#line 1337 "parser.cpp"
     break;
 
   case 30: /* stmt_list: stmt_list stmt SEMICOLON  */
-#line 126 "yacc.y"
+#line 125 "yacc.y"
                                     {(yyvsp[-2].stmtList)->addStmt((yyvsp[-1].stmt)); (yyval.stmtList) = (yyvsp[-2].stmtList);}
-#line 1344 "parser.cpp"
+#line 1343 "parser.cpp"
     break;
 
   case 31: /* stmt_list: %empty  */
-#line 127 "yacc.y"
+#line 126 "yacc.y"
                   {(yyval.stmtList) = new StmtList();}
-#line 1350 "parser.cpp"
+#line 1349 "parser.cpp"
     break;
 
   case 32: /* stmt: assignment  */
-#line 130 "yacc.y"
+#line 129 "yacc.y"
                  {(yyval.stmt) = (yyvsp[0].stmt);}
-#line 1356 "parser.cpp"
+#line 1355 "parser.cpp"
     break;
 
   case 33: /* stmt: func_call  */
-#line 131 "yacc.y"
+#line 130 "yacc.y"
                     {(yyval.stmt) = (yyvsp[0].stmt);}
-#line 1362 "parser.cpp"
+#line 1361 "parser.cpp"
     break;
 
   case 34: /* assignment: IDENTIFIER ASSIGN expression  */
-#line 134 "yacc.y"
+#line 133 "yacc.y"
                                          {(yyval.stmt) = new Assignment((yyvsp[-2].expr),(yyvsp[0].expr));}
-#line 1368 "parser.cpp"
+#line 1367 "parser.cpp"
     break;
 
   case 35: /* func_call: IDENTIFIER LEFTP parameterIDs RIGHTP  */
-#line 137 "yacc.y"
+#line 136 "yacc.y"
                                                 {(yyval.stmt) = new FuncCall((yyvsp[-3].expr),(yyvsp[-1].idList));}
-#line 1374 "parser.cpp"
+#line 1373 "parser.cpp"
     break;
 
   case 36: /* parameterIDs: variables IDENTIFIER  */
-#line 140 "yacc.y"
+#line 139 "yacc.y"
                                    {(yyvsp[-1].idList)->addIdentifier((yyvsp[0].expr)); (yyval.idList) = (yyvsp[-1].idList);}
-#line 1380 "parser.cpp"
+#line 1379 "parser.cpp"
     break;
 
   case 37: /* parameterIDs: %empty  */
-#line 141 "yacc.y"
+#line 140 "yacc.y"
                   {(yyval.idList) = new IdentifierList();}
-#line 1386 "parser.cpp"
+#line 1385 "parser.cpp"
     break;
 
   case 38: /* variables: variables IDENTIFIER COMMA  */
-#line 144 "yacc.y"
+#line 143 "yacc.y"
                                       {(yyvsp[-2].idList)->addIdentifier((yyvsp[-1].expr)); (yyval.idList) = (yyvsp[-2].idList);}
-#line 1392 "parser.cpp"
+#line 1391 "parser.cpp"
     break;
 
   case 39: /* variables: %empty  */
-#line 145 "yacc.y"
+#line 144 "yacc.y"
                   {(yyval.idList) = new IdentifierList();}
-#line 1398 "parser.cpp"
+#line 1397 "parser.cpp"
     break;
 
   case 40: /* expression: expression ADD term  */
-#line 148 "yacc.y"
+#line 147 "yacc.y"
                                 {(yyval.expr) = new BinaryExpr((yyvsp[-2].expr),(yyvsp[0].expr),OPADD);}
-#line 1404 "parser.cpp"
+#line 1403 "parser.cpp"
     break;
 
   case 41: /* expression: expression SUB term  */
-#line 149 "yacc.y"
+#line 148 "yacc.y"
                               {(yyval.expr) = new BinaryExpr((yyvsp[-2].expr),(yyvsp[0].expr),OPSUB);}
-#line 1410 "parser.cpp"
+#line 1409 "parser.cpp"
     break;
 
   case 42: /* expression: term  */
-#line 150 "yacc.y"
+#line 149 "yacc.y"
                {(yyval.expr) = (yyvsp[0].expr);}
-#line 1416 "parser.cpp"
+#line 1415 "parser.cpp"
     break;
 
   case 43: /* term: term POW factor  */
-#line 153 "yacc.y"
+#line 152 "yacc.y"
                       {(yyval.expr) = new BinaryExpr((yyvsp[-2].expr),(yyvsp[0].expr),OPPOW); }
-#line 1422 "parser.cpp"
+#line 1421 "parser.cpp"
     break;
 
   case 44: /* term: term MUL factor  */
-#line 154 "yacc.y"
+#line 153 "yacc.y"
                           {(yyval.expr) = new BinaryExpr((yyvsp[-2].expr),(yyvsp[0].expr),OPMUL); }
-#line 1428 "parser.cpp"
+#line 1427 "parser.cpp"
     break;
 
   case 45: /* term: term DIV factor  */
-#line 155 "yacc.y"
+#line 154 "yacc.y"
                           {(yyval.expr) = new BinaryExpr((yyvsp[-2].expr),(yyvsp[0].expr),OPDIV); }
-#line 1434 "parser.cpp"
+#line 1433 "parser.cpp"
     break;
 
   case 46: /* term: factor  */
-#line 156 "yacc.y"
+#line 155 "yacc.y"
                  {(yyval.expr) = (yyvsp[0].expr); }
-#line 1440 "parser.cpp"
+#line 1439 "parser.cpp"
     break;
 
   case 47: /* factor: LEFTP expression RIGHTP  */
-#line 159 "yacc.y"
+#line 158 "yacc.y"
                                 {(yyval.expr) = (yyvsp[-1].expr); }
-#line 1446 "parser.cpp"
+#line 1445 "parser.cpp"
     break;
 
   case 48: /* factor: value  */
-#line 160 "yacc.y"
+#line 159 "yacc.y"
                 {(yyval.expr) = (yyvsp[0].expr);}
-#line 1452 "parser.cpp"
+#line 1451 "parser.cpp"
     break;
 
   case 49: /* factor: IDENTIFIER  */
-#line 161 "yacc.y"
+#line 160 "yacc.y"
                      {(yyval.expr) = (yyvsp[0].expr);}
-#line 1458 "parser.cpp"
+#line 1457 "parser.cpp"
     break;
 
 
-#line 1462 "parser.cpp"
+#line 1461 "parser.cpp"
 
       default: break;
     }
@@ -1652,12 +1650,8 @@ yyreturn:
   return yyresult;
 }
 
-#line 164 "yacc.y"
+#line 163 "yacc.y"
 
-
-int yywrap(){
-	return 1;
-}
 
 int yyerror(const char *s){
 	cout<<s<<endl;

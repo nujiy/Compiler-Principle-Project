@@ -3,8 +3,9 @@
 #include <string>
 #include "AST.h"
 #include "parser.hpp"
-extern int yylex();
 %}
+
+%option noyywrap
 
 %%
 

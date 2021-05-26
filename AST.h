@@ -13,54 +13,88 @@ using namespace std;
 #define OPLT 7    // 小于
 #define OPEQ 8    // 相等
 
+#define TYPEBOOL 0
+#define TYPEINT 1
+#define TYPEFLOAT 2
+#define TYPECHAR 3
+#define TYPEVOID 4
+#define TYPEBINARY 6
+
+
 class Expr;
+class BinaryExpr;
 class Identifier;
 class VariableDecl;
 
-// 数据类型
-class DataType{
-    string typeName;
+// 各类语句
+class Stmt {
 public:
-    DataType(const char* typeName){
-        this->typeName = string(typeName);
-    }
-    string getType() {
-        return typeName;
-    }
+    Stmt(){}
 };
 
-// 各类语句
-class Stmt {};
+class StmtList {
+    vector<Stmt*> stmtList;
+public:
+    StmtList(){}
+    void addStmt(Stmt* stmt){
+        this->stmtList.push_back(stmt);
+    }
+};
 
 
 // 表达式
 class Expr: public Stmt{
+    int dType;
+    Expr* valueptr;
 public:
     Expr(){}
+    void setDType(int dType){
+        this->dType = dType;
+    }
+
+    int getType(){
+        return dType;
+    }
+
+    virtual Expr* getValue(){
+        if(dType!=TYPEBINARY)
+        {
+            return valueptr;
+        }
+        else{
+            return valueptr->getValue();
+        }
+    }
 };
 
 // 值 也属于表达式
 class Void:public Expr{
 public:
-    Void(){}
+
 };
 
 class Integer:public Expr{
     int value;
 public:
-    Integer(int value):value(value){}
+    Integer(int value):value(value){
+        this->setDType(TYPEINT);
+    }
 };
 
 class Float:public Expr{
     double value;
 public:
-    Float(double value):value(value){}
+    Float(double value):value(value){
+        this->setDType(TYPEFLOAT);
+    }
 };
 
 class Bool:public Expr{
     bool value;
 public:
-    Bool(bool value):value(value){}
+    Bool(bool value):value(value){
+        this->setDType(TYPEBOOL);
+    }
 };
 
 // 函数名、变量名标识符
@@ -71,11 +105,11 @@ public:
 };
 
 class IdentifierList{
-    vector<Expr*> idList;
+    vector<Identifier*> idList;
 public:
     IdentifierList(){}
     void addIdentifier(Expr* id){
-        this->idList.push_back(id);
+        this->idList.push_back(dynamic_cast<Identifier*>(id));
     }
 };
 
@@ -85,10 +119,29 @@ class BinaryExpr: public Expr{
     Expr* Right;
     int op;
 public:
-    BinaryExpr(Expr* Left,Expr* Right,int op):Left(Left),Right(Right),op(op){}
+    BinaryExpr(Expr* Left,Expr* Right,int op):Left(Left),Right(Right),op(op){
+        if(op == TYPEBOOL)
+            this->setDType(TYPEBOOL);
+        else{
+            this->setDType(Left->getType());
+        }
+    }
+    Expr* getValue()
+    {
+        if(this->getType() == TYPEBOOL)
+        {
+            return new Bool(false);
+        }
+        else{
+            // calcaulate value
+        }
+    }
 };
 
-class Decl{};
+class Decl:public Stmt{
+public:
+    Decl(){}
+};
 
 class DeclList{
     vector<Decl*> declList;
@@ -101,12 +154,15 @@ public:
 
 // 变量声明 type name
 class VariableDecl: public Decl{
-    DataType* typeName;
-    Expr* name;
+    Identifier* name; // identifier
     Expr* value;
 public:
-    VariableDecl(DataType* typeName,Expr* name):typeName(typeName),name(name),value(new Expr()){}
-    VariableDecl(DataType* typeName,Expr* name,Expr* value):typeName(typeName),name(name),value(value){}
+    VariableDecl(int dType,Expr* name):name(dynamic_cast<Identifier*>(name)),value(new Expr()){
+        name->setDType(dType);
+    }
+    VariableDecl(int dType,Expr* name,Expr* value):name(dynamic_cast<Identifier*>(name)),value(value){
+        name->setDType(dType);
+    }
 };
 
 // 函数原型 type name (params)
@@ -114,6 +170,7 @@ class ParamsList: public Decl{
     vector<Decl*> params;
 public:
     ParamsList(){}
+    ~ParamsList(){}
     ParamsList(vector<Decl*>& params):params(params){}
     void addParam(Decl* param){
         this->params.push_back(param);
@@ -121,19 +178,11 @@ public:
 };
 
 class ProtoType: public Decl{
-    DataType* typeName;
     Expr* name;
     ParamsList* params;
 public:
-    ProtoType(DataType* typeName,Expr* funcName,ParamsList* params):typeName(typeName),name(funcName),params(params){}
-};
-
-class StmtList {
-    vector<Stmt*> stmtList;
-public:
-    StmtList(){}
-    void addStmt(Stmt* stmt){
-        this->stmtList.push_back(stmt);
+    ProtoType(int dType,Expr* funcName,ParamsList* params):name(funcName),params(params){
+        funcName->setDType(dType);
     }
 };
 
@@ -145,33 +194,35 @@ public:
 
 // 赋值语句
 class Assignment:public Stmt{
-    Expr* identifier;
+    Identifier* identifier;
     Expr* expression;
 public:
-    Assignment(Expr* identifier,Expr* expression):identifier(identifier),expression(expression){}
+    Assignment(Expr* identifier,Expr* expression):identifier(dynamic_cast<Identifier*> (identifier)),expression(expression){
+        
+    }
 };
 
 
 class FuncCall:public Stmt{
-    Expr* funcName;
+    Identifier* funcName;
     IdentifierList* params;
 public:
-    FuncCall(Expr* funcName,IdentifierList* params): funcName(funcName),params(params){}
+    FuncCall(Expr* funcName,IdentifierList* params): funcName(dynamic_cast<Identifier*> (funcName)),params(params){}
 
 };
 
 class FuncBody{
     StmtList* stmts;
-    Stmt* stmtReturn;
+    StmtReturn* stmtReturn;
 public:
-    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(stmtReturn){}
+    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(static_cast<StmtReturn*>(stmtReturn)){}
 };
 
 class FuncImpl{
-    Decl* proto;
+    ProtoType* proto;
     FuncBody* funcBody;
 public:
-    FuncImpl(Decl* proto,FuncBody* funcBody):proto(proto),funcBody(funcBody){}
+    FuncImpl(Decl* proto,FuncBody* funcBody):proto(static_cast<ProtoType*>(proto)),funcBody(funcBody){}
 };
 
 // 函数实现体
@@ -184,7 +235,11 @@ public:
     }
 };
 
-class Block{};
+class Block{
+public:
+    Block(){}
+    virtual ~Block(){}
+};
 
 // 全局成员 包括函数声明与全局变量
 class GlobalPart:public Block {
@@ -208,11 +263,11 @@ public:
 
 
 class AST {
-Block* Global;
-Block* Main;
-Block* Function;
+GlobalPart* Global;
+MainPart* Main;
+FuncPart* Function;
 public:
-    AST(Block* Global,Block* Main,Block* Function):Global(Global),Main(Main),Function(Function){};
+    AST(Block* Global,Block* Main,Block* Function):Global(dynamic_cast<GlobalPart*> (Global)),Main(dynamic_cast<MainPart*> (Main)),Function(dynamic_cast<FuncPart*> (Function)){};
 };
 
 #endif //COMPILER_PRINCIPLE_PROJECT_AST_H

@@ -1,24 +1,24 @@
 %{
-#include "AST.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
 #include <string>
+#include "AST.h"
+#include "FlexLexer.h"
 using namespace std;
 
 AST* program; // total program
 
-extern int yyparse();
+extern int yyparse(yyFlexLexer* yyflex);
 int yyerror(const char* s);
-int yywrap();
 %}
 
 %union
 {
 	Block* block;
 
-	DataType* dataType;
+	int dataType;
 	Decl* declaration;
 	DeclList* declList;
 	ParamsList* paramList;
@@ -104,9 +104,9 @@ parameters: parameters variable_decl COMMA {$1->push_back($2); $$ = $1;}
 		| {$$ = new vector<Decl*>();}
 		;
 
-type: INT {$$ = new DataType($1);}
-	| FLOAT {$$ = new DataType($1);}
-	| BOOL {$$ = new DataType($1);}
+type: INT {$$ = TYPEINT;}
+	| FLOAT {$$ = TYPEFLOAT;}
+	| BOOL {$$ = TYPECHAR;}
 	;
 
 value: INTEGER_VALUE {$$ = new Integer(atoi($1));}
@@ -161,10 +161,6 @@ factor: LEFTP expression RIGHTP {$$ = $2; }
 	;
 
 %%
-
-int yywrap(){
-	return 1;
-}
 
 int yyerror(const char *s){
 	cout<<s<<endl;

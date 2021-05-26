@@ -91,11 +91,11 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 19 "yacc.y"
+#line 18 "yacc.y"
 
 	Block* block;
 
-	DataType* dataType;
+	int dataType;
 	Decl* declaration;
 	DeclList* declList;
 	ParamsList* paramList;
