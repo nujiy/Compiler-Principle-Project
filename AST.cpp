@@ -52,6 +52,9 @@ void printExpr(Expr* expr){
     else if(exprType == EXPRID) {
         dynamic_cast<Identifier*>(expr)->Print();
     }
+    else if(exprType == EXPRFUNCCALL){
+        dynamic_cast<FuncCall*>(expr)->Print();
+    }
 }
 
 void printDecl(Decl* decl) {
@@ -81,9 +84,6 @@ void printStmt(Stmt* stmt) {
     case STMTASSIGN:
         dynamic_cast<Assignment*>(stmt)->Print();
         break;
-    case STMTFUNCCALL:
-        dynamic_cast<FuncCall*>(stmt)->Print();
-        break;        
     default:
         break;
     }

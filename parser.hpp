@@ -101,15 +101,15 @@ union YYSTYPE
 	ParamsList* paramList;
 	Stmt* stmt;
 	StmtList* stmtList;
-	Expr* expr; 
+	Expr* expr;
+	ExprList* exprList;
 	FuncBody* funcbody;
 	FuncImpl* funcImpl;
 	FuncList* funcList;
 	char Char;
 	char Op;
 	char* txt;
-
-	IdentifierList* idList;
+    string* Str;
 	vector<Decl*>* declVector;
 
 #line 116 "parser.hpp"

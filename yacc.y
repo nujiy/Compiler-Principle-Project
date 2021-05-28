@@ -23,21 +23,21 @@ int yyerror(const char* s);
 	ParamsList* paramList;
 	Stmt* stmt;
 	StmtList* stmtList;
-	Expr* expr; 
+	Expr* expr;
+	ExprList* exprList;
 	FuncBody* funcbody;
 	FuncImpl* funcImpl;
 	FuncList* funcList;
 	char Char;
 	char Op;
 	char* txt;
-
-	IdentifierList* idList;
+    string* Str;
 	vector<Decl*>* declVector;
 }
 
 %token SEMICOLON COMMA LEFTP RIGHTP  LEFTB RIGHTB
 %token MAIN  RETURN FOR WHILE IF ELSE
-%token <expr> IDENTIFIER 
+%token <Str> IDENTIFIER
 %token <txt> INT FLOAT BOOL
 %token <txt> INTEGER_VALUE FLOAT_VALUE BOOL_VALUE
 
@@ -52,10 +52,10 @@ int yyerror(const char* s);
 %type <paramList> parameter_decl
 %type <declVector> parameters
 %type <dataType> type
-%type <expr> value
+%type <expr> id value func_call
 %type <expr> expression term factor
-%type <idList> variables parameterIDs
-%type <stmt> stmt stmt_return assignment func_call
+%type <exprList> variables parameterExprs
+%type <stmt> stmt stmt_return assignment
 %type <stmtList> stmt_list
 %type <funcbody> function_body
 %type <funcImpl> function_impl
@@ -89,11 +89,14 @@ global_item: variable_decl {$$ = $1;}
 		|	protoType {$$ = $1;}
 		;
 
-variable_decl: type IDENTIFIER	{$$ = new VariableDecl($1,$2);}
-		| type IDENTIFIER value {$$ = new VariableDecl($1,$2,$3);}
+id: IDENTIFIER {$$ = new Identifier(*$1);}
+    ;
+
+variable_decl: type id	{$$ = new VariableDecl($1,$2);}
+		| type id ASSIGN expression {$$ = new VariableDecl($1,$2,$4);}
 		;
 
-protoType: type IDENTIFIER LEFTP parameter_decl RIGHTP {$$ = new ProtoType($1,$2,$4);}	
+protoType: type id LEFTP parameter_decl RIGHTP {$$ = new ProtoType($1,$2,$4);}
 		;
 
 parameter_decl: parameters variable_decl {$$ = new ParamsList(*$1); $$->addParam($2);}
@@ -116,7 +119,7 @@ value: INTEGER_VALUE {$$ = new Integer(atoi($1));}
 function_body: LEFTB stmt_list  stmt_return RIGHTB {$$ = new FuncBody($2,$3);}
 		;
 
-stmt_return: RETURN value SEMICOLON {$$ = $2;}
+stmt_return: RETURN expression SEMICOLON {$$ = $2;}
 		| RETURN SEMICOLON {$$ = new Void();}
 		| SEMICOLON {$$ = new Void();}
 		| {$$ = new Void();}
@@ -128,20 +131,21 @@ stmt_list: stmt_list stmt SEMICOLON {$1->addStmt($2); $$ = $1;}
 
 stmt: assignment {$$ = $1;}
 	| func_call {$$ = $1;}
+	| variable_decl {$$ = $1;}
 	;
 
-assignment: IDENTIFIER ASSIGN expression {$$ = new Assignment($1,$3);}
+assignment: id ASSIGN expression {$$ = new Assignment($1,$3);}
 		;
 
-func_call: IDENTIFIER LEFTP parameterIDs RIGHTP {$$ = new FuncCall($1,$3);}
+func_call: id LEFTP parameterExprs RIGHTP {$$ = new FuncCall($1,$3);}
 		;
 
-parameterIDs: variables IDENTIFIER {$1->addIdentifier($2); $$ = $1;}
-		| {$$ = new IdentifierList();}
+parameterExprs: variables expression {$1->addExpr($2); $$ = $1;}
+		| {$$ = new ExprList();}
 		;
 
-variables: variables IDENTIFIER COMMA {$1->addIdentifier($2); $$ = $1;}
-		| {$$ = new IdentifierList();}
+variables: variables expression COMMA {$1->addExpr($2); $$ = $1;}
+		| {$$ = new ExprList();}
 		;
 
 expression: expression ADD term {$$ = new BinaryExpr($1,$3,OPADD);}
@@ -157,7 +161,8 @@ term: term POW factor {$$ = new BinaryExpr($1,$3,OPPOW); }
 
 factor: LEFTP expression RIGHTP {$$ = $2; }
 	| value {$$ = $1;}
-	| IDENTIFIER {$$ = $1;}
+	| func_call {$$ = $1;}
+	| id {$$ = $1;}
 	;
 
 %%

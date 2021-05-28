@@ -24,6 +24,7 @@ using namespace std;
 #define EXPRID 0    // determine the expr type variable | literal | binary-expression to be calculate
 #define EXPRVALUE 1
 #define EXPRBINARY 2
+#define EXPRFUNCCALL 2
 
 #define DECLVARIABLE 10
 #define DECLPROTO 11
@@ -31,9 +32,8 @@ using namespace std;
 
 #define STMTEXPR 0
 #define STMTASSIGN 1
-#define STMTFUNCCALL 2
-#define STMTDECL 3
-#define STMTRETURN 4
+#define STMTDECL 2
+#define STMTRETURN 3
 
 class Stmt;
 
@@ -84,7 +84,9 @@ public:
 class StmtList {
     vector<Stmt*> stmtList;
 public:
-    StmtList(){}
+    StmtList(){
+        cout<<"stmtList created"<<endl;
+    }
     void addStmt(Stmt* stmt){
         this->stmtList.push_back(stmt);
     }
@@ -137,6 +139,21 @@ public:
     }
 };
 
+class ExprList{
+    vector<Expr*> exprList;
+public:
+    ExprList(){
+        cout<<"exprList created"<<endl;
+    }
+    void addExpr(Expr* expr){
+        this->exprList.push_back(expr);
+    }
+    void Print(){
+        for(int i=0;i<exprList.size();i++){
+            exprList[i]->Print();
+        }
+    }
+};
 // 值 也属于表达式
 class Void:public Expr{
 public:
@@ -182,10 +199,9 @@ public:
 
 // 函数名、变量名标识符
 class Identifier:public Expr {
-    string identifier;
+    string& identifier;
 public:
-    Identifier(const char* identifier){
-        this->identifier = string(identifier); 
+    Identifier(string& identifier):identifier(identifier){
         this->setExprType(EXPRID);
     }
 
@@ -194,10 +210,33 @@ public:
     }
 };
 
+// 函数调用表达式
+class FuncCall:public Expr{
+    Identifier* funcName;
+    ExprList* params;
+public:
+    FuncCall(Expr* funcName,ExprList* params): funcName(dynamic_cast<Identifier*> (funcName)),params(params){
+        this->setExprType(EXPRFUNCCALL);
+        cout<<"a FuncCall created"<<endl;
+    }
+    FuncCall(Expr* funcName):funcName(dynamic_cast<Identifier*> (funcName)){
+        this->setExprType(EXPRFUNCCALL);
+        cout<<"a FuncCall created"<<endl;
+    }
+    void Print(){
+        funcName->Print();
+        cout<<"(";
+        params->Print();
+        cout<<")"<<endl;
+    }
+};
+
 class IdentifierList{
     vector<Identifier*> idList;
 public:
-    IdentifierList(){}
+    IdentifierList(){
+        cout<<"an IdentifierList created"<<endl;
+    }
     void addIdentifier(Expr* id){
         this->idList.push_back(dynamic_cast<Identifier*>(id));
     }
@@ -245,6 +284,7 @@ public:
         this->Left->Print();
         cout<<")"<< getOpMap(this->op)<<"(";
         this->Right->Print();
+        cout<<")";
     }
 };
 
@@ -270,7 +310,7 @@ public:
 class DeclList{
     vector<Decl*> declList;
 public:
-    DeclList():declList(declList){}
+    DeclList(){}
     void addDecl(Decl* decl){
         this->declList.push_back(decl);
     }
@@ -290,10 +330,12 @@ public:
     VariableDecl(int dType,Expr* name):name(name),value(new Expr()){
         name->setDType(dType);
         this->setDeclType(DECLVARIABLE);
+        cout<<"a variable declared"<<endl;
     }
     VariableDecl(int dType,Expr* name,Expr* value):name(name),value(value){
         name->setDType(dType);
         this->setDeclType(DECLPROTO);
+        cout<<"a variable declared"<<endl;
     }
     void Print()
     {
@@ -340,6 +382,7 @@ public:
     ProtoType(int dType,Expr* funcName,ParamsList* params):name(funcName),params(params){
         funcName->setDType(dType);
         this->setDeclType(DECLPROTO);
+        cout<<"a prototype declared"<<endl;
     }
     void Print(){
         cout<<getTypeMap(name->getDType())<<" ";
@@ -355,11 +398,10 @@ class StmtReturn: public Stmt{
 public:
     StmtReturn(Expr* value):value(value){
         this->setStmtType(STMTRETURN);
+        cout<<"a return statement created"<<endl;
     }
     void Print(){
-        cout<<"return ";
         value->Print();
-        cout<<endl;
     }
 };
 
@@ -370,42 +412,30 @@ class Assignment:public Stmt{
 public:
     Assignment(Expr* identifier,Expr* expression):identifier(dynamic_cast<Identifier*> (identifier)),expression(expression){
         this->setStmtType(STMTASSIGN);
+        cout<<"an assignment created"<<endl;
     }
     void Print(){
         identifier->Print();
         cout<<"=";
-
-        int exprType = expression->getExprType();
-        
-
         expression->Print();
         cout<<endl;
     }
 };
 
-class FuncCall:public Stmt{
-    Identifier* funcName;
-    IdentifierList* params;
-public:
-    FuncCall(Expr* funcName,IdentifierList* params): funcName(dynamic_cast<Identifier*> (funcName)),params(params){
-        this->setStmtType(STMTFUNCCALL);
-    }
-    void Print(){
-        funcName->Print();
-        cout<<"(";
-        params->Print();
-        cout<<")"<<endl;
-    }
-};
 
 class FuncBody{
     StmtList* stmts;
     StmtReturn* stmtReturn;
 public:
-    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(static_cast<StmtReturn*>(stmtReturn)){}
+    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(static_cast<StmtReturn*>(stmtReturn)){
+        cout<<"a Function Body ceated"<<endl;
+    }
     void Print(){
+        cout<<"{"<<endl;
         stmts->Print();
+        cout<<"return ";
         stmtReturn->Print();
+        cout<<endl<<"}"<<endl;
     }
 };
 
@@ -416,9 +446,8 @@ public:
     FuncImpl(Decl* proto,FuncBody* funcBody):proto(static_cast<ProtoType*>(proto)),funcBody(funcBody){}
     void Print(){
         proto->Print();
-        cout<<endl<<"{";
         funcBody->Print();
-        cout<<"}"<<endl;
+        cout<<endl;
     }
 };
 
@@ -464,6 +493,7 @@ class MainPart:public Block {
 public:
     MainPart(FuncBody* mainFunc):mainFunc(mainFunc){}
     void Print(){
+        cout<<"main()";
         mainFunc->Print();
     }
 };
