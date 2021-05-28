@@ -1,9 +1,7 @@
 Int i = 0;
+Float j = 0.1;
 
-Float i = 0.1;
-
-
-
-main (){
+main()
+{
 
 }

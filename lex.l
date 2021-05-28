@@ -3,6 +3,7 @@
 #include <string>
 #include "AST.h"
 #include "parser.hpp"
+using namespace std;
 %}
 
 %option noyywrap

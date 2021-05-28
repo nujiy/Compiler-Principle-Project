@@ -1,6 +1,8 @@
-referenced docs:
+referenced resource:
 
-[llvm](https://llvm-tutorial-cn.readthedocs.io/en/latest/)
+[llvm doc](https://llvm-tutorial-cn.readthedocs.io/en/latest/)
+
+[lex&bison win-version]()
 
 some useful solution:
 

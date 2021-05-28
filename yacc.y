@@ -9,7 +9,6 @@
 using namespace std;
 
 AST* program; // total program
-
 extern int yyparse(yyFlexLexer* yyflex);
 int yyerror(const char* s);
 %}
@@ -68,7 +67,7 @@ program: global main_block function {program = new AST($1,$2,$3);}
 		;
 
 global:  decl_list {$$ = new GlobalPart($1);}
-			;
+		;
 
 decl_list: decl_list global_item SEMICOLON {$$->addDecl($2); $$ = $1;}
 			| {$$ = new DeclList();}
@@ -77,6 +76,7 @@ decl_list: decl_list global_item SEMICOLON {$$->addDecl($2); $$ = $1;}
 main_block: MAIN LEFTP RIGHTP function_body {$$ = new MainPart($4);};
 
 function: function_list {$$ = new FuncPart($1);}
+		;
 
 function_list: function_list function_impl {$1->addFunction($2); $$ = $1;}
 		| {$$ = new FuncList();}
@@ -104,9 +104,9 @@ parameters: parameters variable_decl COMMA {$1->push_back($2); $$ = $1;}
 		| {$$ = new vector<Decl*>();}
 		;
 
-type: INT {$$ = TYPEINT;}
-	| FLOAT {$$ = TYPEFLOAT;}
-	| BOOL {$$ = TYPECHAR;}
+type: INT {$$ = VALUEINT;}
+	| FLOAT {$$ = VALUEFLOAT;}
+	| BOOL {$$ = VALUEBOOL;}
 	;
 
 value: INTEGER_VALUE {$$ = new Integer(atoi($1));}
