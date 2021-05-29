@@ -1,4 +1,6 @@
 %{
+#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <string>
 #include <iostream>
@@ -12,7 +14,8 @@ using namespace std;
 %%
 
 [ \t\n]+ {}
-
+\[ {return LEFTSB;}
+] {return RIGHTSB;}
 \( {return LEFTP;}
 \) {return RIGHTP;}
 \{ {return LEFTB;}
@@ -30,7 +33,10 @@ using namespace std;
 \< {return LT;}
 == {return EQ;}
 \<> {return NEQ;}
-
+\<= {return ELT;}
+>= {return EGT;}
+\| {return OR;}
+&& {return AND;}
 
 Float {return FLOAT;}
 Int {return INT;}
@@ -43,9 +49,9 @@ for {return FOR;}
 if {return IF;}
 else {return ELSE;}
 
-(_|[a-zA-Z])+[_a-zA-Z0-9]* {yylval.Str = new string(yytext); cout<<"confront Id:"<<*(yylval.Str)<<endl; return IDENTIFIER;}
+(_|[a-zA-Z])+[_a-zA-Z0-9]* {yylval.Str = new string(yytext); return IDENTIFIER;}
 
--?(0|[1-9][0-9]*) {return INTEGER_VALUE;}
+-?(0|[1-9][0-9]*) {yylval.valueStr = yytext;return INTEGER_VALUE;}
 
 [0-9]+|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)? {return FLOAT_VALUE;}
 

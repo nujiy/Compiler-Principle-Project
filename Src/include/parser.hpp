@@ -60,29 +60,35 @@ extern int yydebug;
     RIGHTP = 261,                  /* RIGHTP  */
     LEFTB = 262,                   /* LEFTB  */
     RIGHTB = 263,                  /* RIGHTB  */
-    MAIN = 264,                    /* MAIN  */
-    RETURN = 265,                  /* RETURN  */
-    FOR = 266,                     /* FOR  */
-    WHILE = 267,                   /* WHILE  */
-    IF = 268,                      /* IF  */
-    ELSE = 269,                    /* ELSE  */
-    IDENTIFIER = 270,              /* IDENTIFIER  */
-    INT = 271,                     /* INT  */
-    FLOAT = 272,                   /* FLOAT  */
-    BOOL = 273,                    /* BOOL  */
-    INTEGER_VALUE = 274,           /* INTEGER_VALUE  */
-    FLOAT_VALUE = 275,             /* FLOAT_VALUE  */
-    BOOL_VALUE = 276,              /* BOOL_VALUE  */
-    ASSIGN = 277,                  /* ASSIGN  */
-    GT = 278,                      /* GT  */
-    LT = 279,                      /* LT  */
-    EQ = 280,                      /* EQ  */
-    NEQ = 281,                     /* NEQ  */
-    ADD = 282,                     /* ADD  */
-    SUB = 283,                     /* SUB  */
-    MUL = 284,                     /* MUL  */
-    DIV = 285,                     /* DIV  */
-    POW = 286                      /* POW  */
+    LEFTSB = 264,                  /* LEFTSB  */
+    RIGHTSB = 265,                 /* RIGHTSB  */
+    MAIN = 266,                    /* MAIN  */
+    RETURN = 267,                  /* RETURN  */
+    FOR = 268,                     /* FOR  */
+    WHILE = 269,                   /* WHILE  */
+    IF = 270,                      /* IF  */
+    ELSE = 271,                    /* ELSE  */
+    IDENTIFIER = 272,              /* IDENTIFIER  */
+    INT = 273,                     /* INT  */
+    FLOAT = 274,                   /* FLOAT  */
+    BOOL = 275,                    /* BOOL  */
+    INTEGER_VALUE = 276,           /* INTEGER_VALUE  */
+    FLOAT_VALUE = 277,             /* FLOAT_VALUE  */
+    BOOL_VALUE = 278,              /* BOOL_VALUE  */
+    ASSIGN = 279,                  /* ASSIGN  */
+    GT = 280,                      /* GT  */
+    LT = 281,                      /* LT  */
+    EQ = 282,                      /* EQ  */
+    NEQ = 283,                     /* NEQ  */
+    EGT = 284,                     /* EGT  */
+    ELT = 285,                     /* ELT  */
+    AND = 286,                     /* AND  */
+    OR = 287,                      /* OR  */
+    ADD = 288,                     /* ADD  */
+    SUB = 289,                     /* SUB  */
+    MUL = 290,                     /* MUL  */
+    DIV = 291,                     /* DIV  */
+    POW = 292                      /* POW  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -96,23 +102,23 @@ union YYSTYPE
 	Block* block;
 
 	int dataType;
-	Decl* declaration;
+	int intval;
+	Decl* decl;
 	DeclList* declList;
-	ParamsList* paramList;
 	Stmt* stmt;
 	StmtList* stmtList;
 	Expr* expr;
 	ExprList* exprList;
+
 	FuncBody* funcbody;
 	FuncImpl* funcImpl;
 	FuncList* funcList;
 	char Char;
 	char Op;
-	char* txt;
+	char* valueStr;
     string* Str;
-	vector<Decl*>* declVector;
 
-#line 116 "../include/parser.hpp"
+#line 122 "../include/parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

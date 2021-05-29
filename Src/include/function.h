@@ -6,9 +6,7 @@ class FuncBody{
     StmtList* stmts;
     StmtReturn* stmtReturn;
 public:
-    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(dynamic_cast<StmtReturn*>(stmtReturn)){
-        cout<<"a Function Body ceated"<<endl;
-    }
+    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(dynamic_cast<StmtReturn*>(stmtReturn)){}
     void Print(){
         cout<<"{"<<endl;
         stmts->Print();
@@ -35,11 +33,9 @@ class FuncList{
     vector<FuncImpl*> functions;
 public:
     FuncList(){
-        cout<<"create FuncList node"<<endl;
     }
     void addFunction(FuncImpl* impl){
         this->functions.push_back(impl);
-        cout<<"impl a function"<<endl;
     }
 
     void Print(){

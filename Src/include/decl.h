@@ -1,8 +1,10 @@
 #ifndef COMPILER_DECL_H
 #define COMPILER_DECL_H
+#include <iostream>
 #include "util.h"
 #include "stmt.h"
 
+using namespace std;
 
 class DeclList{
     vector<Decl*> declList;
@@ -27,19 +29,18 @@ public:
     VariableDecl(int dType,Expr* name):name(name),value(new Expr()){
         name->setDType(dType);
         this->setDeclType(DECLVARIABLE);
-        cout<<"a variable declared"<<endl;
     }
     VariableDecl(int dType,Expr* name,Expr* value):name(name),value(value){
         name->setDType(dType);
         this->setDeclType(DECLPROTO);
-        cout<<"a variable declared"<<endl;
     }
     void Print()
     {
         cout<<getTypeMap(name->getDType())<<" ";
         name->Print();
         cout<<" ";
-        value->Print();
+        if(value != NULL)
+            value->Print();
         cout<<endl;
     }
 };
@@ -75,12 +76,11 @@ public:
 // 函数原型声明
 class ProtoType: public Decl{
     Expr* name;
-    ParamsList* params;
+    DeclList* params;
 public:
-    ProtoType(int dType,Expr* funcName,ParamsList* params):name(funcName),params(params){
+    ProtoType(int dType,Expr* funcName,DeclList* params):name(funcName),params(params){
         funcName->setDType(dType);
         this->setDeclType(DECLPROTO);
-        cout<<"a prototype declared"<<endl;
     }
     void Print(){
         cout<<getTypeMap(name->getDType())<<" ";
@@ -90,4 +90,21 @@ public:
         cout<<")"<<endl;
     }
 };
+
+class ArrayDecl: public Decl{
+    Expr* name;
+    int size;
+    int dType;
+public:
+    ArrayDecl(int dType,Expr* arrayName,int size):dType(dType),name(arrayName),size(size){
+        arrayName->setDType(VALUEARRAY);
+        this->setDeclType(DECLARRAY);
+    }
+    void Print(){
+        cout<<getTypeMap(this->dType)<<" "<<endl;
+        this->name->Print();
+        cout<<"["<<size<<"]"<<endl;
+    }
+};
+
 #endif //COMPILER_DECL_H

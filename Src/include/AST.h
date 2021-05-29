@@ -31,7 +31,6 @@ class MainPart:public Block {
 public:
     MainPart(FuncBody* mainFunc):mainFunc(mainFunc){}
     void Print(){
-        cout<<"main()";
         mainFunc->Print();
     }
 };
@@ -52,7 +51,6 @@ MainPart* Main;
 FuncPart* Function;
 public:
     AST(Block* Global,Block* Main,Block* Function):Global(dynamic_cast<GlobalPart*> (Global)),Main(dynamic_cast<MainPart*> (Main)),Function(dynamic_cast<FuncPart*> (Function)){
-        cout<<"create AST node"<<endl;
         setMap();
     };
     void Print()

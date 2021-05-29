@@ -18,11 +18,6 @@ void printStmt(Stmt* stmt) {
     }
 }
 
-Expr::Expr(){
-    dType = -1; // null node
-    this->setStmtType(STMTEXPR);
-}
-
 void Expr::setDType(int dType){
     this->dType = dType;
 }

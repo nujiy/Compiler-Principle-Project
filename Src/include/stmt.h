@@ -34,7 +34,6 @@ class StmtList {
     vector<Stmt*> stmtList;
 public:
     StmtList(){
-        cout<<"stmtList created"<<endl;
     }
     void addStmt(Stmt* stmt){
         this->stmtList.push_back(stmt);
@@ -52,7 +51,10 @@ class Expr: public Stmt{
     int exprType;
     Expr* valueptr;
 public:
-    Expr();
+    Expr(){
+        this->dType = -1; // base node
+        this->setStmtType(STMTEXPR);
+    }
     ~Expr(){}
     void setDType(int dType);
 
@@ -74,7 +76,6 @@ class StmtReturn: public Stmt{
 public:
     StmtReturn(Expr* value):value(value){
         this->setStmtType(STMTRETURN);
-        cout<<"a return statement created"<<endl;
     }
     void Print(){
         value->Print();

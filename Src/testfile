@@ -1,0 +1,17 @@
+Int i = 30;
+Float j = 0;
+Float testFunction(Float a, Int b);
+Int a[20];
+
+main(){
+    Int v = 5;
+    Bool t = (v>6)|(i>31);
+    Float result = testFunction(0.0,v);
+    Float b[20];
+    return result;
+}
+
+Float testFunction(Float a, Int b){
+    Int result = a+b;
+    return (a+b)*b;
+}

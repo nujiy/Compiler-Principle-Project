@@ -9,6 +9,9 @@ void printDecl(Decl* decl) {
         case DECLPROTO:
             dynamic_cast<ProtoType*>(decl)->Print();
             break;
+        case DECLARRAY:
+            dynamic_cast<ArrayDecl*>(decl)->Print();
+            break;
         default:
             break;
     }

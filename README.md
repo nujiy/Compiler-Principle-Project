@@ -41,10 +41,12 @@ global: decl_list
 decl_list: decl_list global_item SEMICOLON
 global_item: variable_decl | protoType
 id: IDENTIFIER
+array_decl: type id '[' size ']' | type id '[' size ']' // to test
+size: INT
 variable_decl: type id | type id ASSIGN expression
 protoType: type id LEFTP parameter_decl RIGHTP
 parameter_decl:parameters variable_decl | e
-parameters: parameters variable_decl | e
+parameters: parameters variable_decl | e 
 type: INT | FLOAT | BOOL
 main_block: MAIN LEFTP RIGHTP function_body
 function: function_list
@@ -57,14 +59,25 @@ func_call: id LEFTP parameterIDs RIGHTP
 parameterIDs: variables id | e
 variables: variables id COMMA | e
 assignment: id ASSIGN expression
-expression: expression ASS term
-            | expresstion SUB term
+
+expression: arith_expr | relation_expr | logic_expr
+
+logic_expr: arith_expr logic_op arith_expr
+logic_op: LT GT EQ NEQ EGT ELT 
+
+relation_expr: logic_expr relation_op logic_expr
+realation_op: AND OR 
+
+arith_expr: arith_expr ADD term
+            | arith_expr SUB term
             | term
+
 term: term POW factor
         | term MUL factor
         | term DIV factor
         | factor
-factor: LEFTP expression RIGHTP
+
+factor: LEFTP arith_expr RIGHTP
         | value
         | id
         | func_call

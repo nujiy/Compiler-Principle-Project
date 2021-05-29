@@ -1,5 +1,6 @@
 #ifndef COMPILER_EXPR_H
 #define COMPILER_EXPR_H
+
 #include "util.h"
 #include "stmt.h"
 
@@ -7,7 +8,6 @@ class ExprList{
     vector<Expr*> exprList;
 public:
     ExprList(){
-        cout<<"exprList created"<<endl;
     }
     void addExpr(Expr* expr){
         this->exprList.push_back(expr);
@@ -22,6 +22,10 @@ public:
 // 字面量表达式
 class Void:public Expr{
 public:
+    Void(){
+        this->setDType(VALUEVOID);
+        this->setExprType(EXPRVALUE);
+    }
     void Print(){}
 };
 
@@ -82,11 +86,9 @@ class FuncCall:public Expr{
 public:
     FuncCall(Expr* funcName,ExprList* params): funcName(dynamic_cast<Identifier*> (funcName)),params(params){
         this->setExprType(EXPRFUNCCALL);
-        cout<<"a FuncCall created"<<endl;
     }
     FuncCall(Expr* funcName):funcName(dynamic_cast<Identifier*> (funcName)){
         this->setExprType(EXPRFUNCCALL);
-        cout<<"a FuncCall created"<<endl;
     }
     void Print(){
         funcName->Print();
@@ -105,7 +107,7 @@ public:
     BinaryExpr(Expr* Left,Expr* Right,int op):Left(Left),Right(Right),op(op) {
         this->setExprType(EXPRBINARY);
 
-        if(op == OPEQ || op==OPLT || op == OPGT)
+        if(op == OPEQ || op==OPLT || op == OPGT || op == OPEGT || op == OPELT || op == OPNEQ || op == OPAND || op == OPOR)
             this->setDType(VALUEBOOL);
         else{
             this->setDType(Left->getDType());
@@ -118,7 +120,7 @@ public:
             return new Bool(false);
         }
         else{
-            // calcaulate value
+
         }
     }
 
@@ -130,4 +132,5 @@ public:
         cout<<")";
     }
 };
+
 #endif //COMPILER_EXPR_H
