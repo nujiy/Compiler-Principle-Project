@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_PARSER_HPP_INCLUDED
-# define YY_YY_PARSER_HPP_INCLUDED
+#ifndef YY_YY_INCLUDE_PARSER_HPP_INCLUDED
+# define YY_YY_INCLUDE_PARSER_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -91,7 +91,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 17 "yacc.y"
+#line 17 "yacc.ypp"
 
 	Block* block;
 
@@ -112,7 +112,7 @@ union YYSTYPE
     string* Str;
 	vector<Decl*>* declVector;
 
-#line 116 "parser.hpp"
+#line 116 "../include/parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -125,4 +125,4 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_PARSER_HPP_INCLUDED  */
+#endif /* !YY_YY_INCLUDE_PARSER_HPP_INCLUDED  */

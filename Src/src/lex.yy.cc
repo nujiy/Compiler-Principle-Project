@@ -472,8 +472,8 @@ static const flex_int16_t yy_chk[247] =
 #include <math.h>
 #include <string>
 #include <iostream>
-#include "AST.h"
-#include "parser.hpp"
+#include "../include/AST.h"
+#include "../include/parser.hpp"
 using namespace std;
 #line 478 "lex.yy.cc"
 #line 479 "lex.yy.cc"

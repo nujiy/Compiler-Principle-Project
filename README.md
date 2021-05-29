@@ -7,7 +7,7 @@ ZJU compiler principle project
 #### 1.测试命令
 命令行输入:
 测试文件testfile需要与exe置于同一目录下
-win_bison -d -o parser.cpp yacc.y
+win_bison --defines=../include/parser.h -o parser.cpp yacc.ypp
 win_flex -+ lex.l
 g++ -o parser main.cpp parser.cpp lex.yy.cc AST.cpp
 
@@ -18,7 +18,8 @@ g++ -o parser main.cpp parser.cpp lex.yy.cc AST.cpp
 ## 具体实现
 ### 1. 内容列表
 - 语法
-    - [x] 变量声明
+    - [x] 变量声
+    - [ ] 类型声明: 考虑结构体
     - [x] 函数声明
     - [ ] 数组声明
     - [x] 赋值语句
@@ -29,6 +30,7 @@ g++ -o parser main.cpp parser.cpp lex.yy.cc AST.cpp
     - [ ] 分支语句
 - 未完成
     - [ ] 类型检查
+    - [ ] 作用域  
     - [ ] 生成符号表
     - [ ] 中间代码生成
     - [ ] 目标代码生成

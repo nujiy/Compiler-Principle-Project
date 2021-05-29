@@ -2,8 +2,8 @@
 #include <math.h>
 #include <string>
 #include <iostream>
-#include "AST.h"
-#include "parser.hpp"
+#include "../include/AST.h"
+#include "../include/parser.hpp"
 using namespace std;
 %}
 

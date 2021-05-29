@@ -4,8 +4,8 @@
 #include <math.h>
 #include <iostream>
 #include <string>
-#include "AST.h"
-#include "FlexLexer.h"
+#include "../include/AST.h"
+#include "../include/FlexLexer.h"
 using namespace std;
 
 AST* program; // total program
@@ -119,10 +119,10 @@ value: INTEGER_VALUE {$$ = new Integer(atoi($1));}
 function_body: LEFTB stmt_list  stmt_return RIGHTB {$$ = new FuncBody($2,$3);}
 		;
 
-stmt_return: RETURN expression SEMICOLON {$$ = $2;}
-		| RETURN SEMICOLON {$$ = new Void();}
-		| SEMICOLON {$$ = new Void();}
-		| {$$ = new Void();}
+stmt_return: RETURN expression SEMICOLON {$$ = new StmtReturn($2);}
+		| RETURN SEMICOLON {$$ = new StmtReturn(new Void());}
+		| SEMICOLON {$$ = new StmtReturn(new Void());}
+		| {$$ = new StmtReturn(new Void());}
 		;
 
 stmt_list: stmt_list stmt SEMICOLON {$1->addStmt($2); $$ = $1;}

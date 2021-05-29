@@ -2,8 +2,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "AST.h"
-#include "FlexLexer.h"
+#include "./include/AST.h"
+#include "./src/FlexLexer.h"
 using namespace std;
 extern int yyparse(yyFlexLexer* yyflex);
 extern AST* program;
