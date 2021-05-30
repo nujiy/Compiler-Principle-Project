@@ -16,6 +16,11 @@ void setMap()
     opMap[OPEQ] = "==";
     opMap[OPGT] = ">";
     opMap[OPLT] = "<";
+    opMap[OPELT] = "<=";
+    opMap[OPEGT] = ">=";
+    opMap[OPNEQ] = "<>";
+     opMap[OPAND] = "&&";
+    opMap[OPOR] = "|";
 }
 
 string& getTypeMap(int index)

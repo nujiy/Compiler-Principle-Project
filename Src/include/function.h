@@ -1,12 +1,21 @@
 #ifndef COMPILER_FUNCTION_H
 #define COMPILER_FUNCTION_H
+#include <memory>
 #include "decl.h"
 
+class FuncImpl;
+class FuncList;
+class FuncBody;
+
+typedef shared_ptr<FuncImpl> funcImplPtr;
+typedef shared_ptr<FuncList> funcListPtr;
+typedef shared_ptr<FuncBody> funcBodyPtr;
+
 class FuncBody{
-    StmtList* stmts;
-    StmtReturn* stmtReturn;
+    stmtListPtr stmts;
+    stmtPtr stmtReturn;
 public:
-    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(dynamic_cast<StmtReturn*>(stmtReturn)){}
+    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(stmtReturn){}
     void Print(){
         cout<<"{"<<endl;
         stmts->Print();
@@ -17,10 +26,10 @@ public:
 };
 
 class FuncImpl{
-    ProtoType* proto;
-    FuncBody* funcBody;
+    declPtr proto;
+    funcBodyPtr funcBody;
 public:
-    FuncImpl(Decl* proto,FuncBody* funcBody):proto(dynamic_cast<ProtoType*>(proto)),funcBody(funcBody){}
+    FuncImpl(Decl* proto,FuncBody* funcBody):proto(proto),funcBody(funcBody){}
     void Print(){
         proto->Print();
         funcBody->Print();
@@ -30,12 +39,12 @@ public:
 
 // 函数实现体
 class FuncList{
-    vector<FuncImpl*> functions;
+    vector<funcImplPtr> functions;
 public:
-    FuncList(){
-    }
+    FuncList(){}
     void addFunction(FuncImpl* impl){
-        this->functions.push_back(impl);
+        funcImplPtr tmp(impl);
+        this->functions.push_back(tmp);
     }
 
     void Print(){

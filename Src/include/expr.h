@@ -1,16 +1,21 @@
 #ifndef COMPILER_EXPR_H
 #define COMPILER_EXPR_H
-
+#include <memory>
 #include "util.h"
 #include "stmt.h"
+using namespace std;
+class ExprList;
+
+typedef shared_ptr<ExprList> exprListPtr;
 
 class ExprList{
-    vector<Expr*> exprList;
+    vector<exprPtr> exprList;
 public:
     ExprList(){
     }
     void addExpr(Expr* expr){
-        this->exprList.push_back(expr);
+        exprPtr tmp(expr);
+        this->exprList.push_back(tmp);
     }
     void Print(){
         for(int i=0;i<exprList.size();i++){
@@ -81,13 +86,13 @@ public:
 
 // 函数调用表达式
 class FuncCall:public Expr{
-    Identifier* funcName;
-    ExprList* params;
+    exprPtr funcName;
+    exprListPtr params;
 public:
-    FuncCall(Expr* funcName,ExprList* params): funcName(dynamic_cast<Identifier*> (funcName)),params(params){
+    FuncCall(Expr* funcName,ExprList* params): funcName(funcName),params(params){
         this->setExprType(EXPRFUNCCALL);
     }
-    FuncCall(Expr* funcName):funcName(dynamic_cast<Identifier*> (funcName)){
+    FuncCall(exprPtr funcName):funcName(funcName){
         this->setExprType(EXPRFUNCCALL);
     }
     void Print(){
@@ -100,8 +105,8 @@ public:
 
 // 二元运算表达式
 class BinaryExpr: public Expr{
-    Expr* Left;
-    Expr* Right;
+    exprPtr Left;
+    exprPtr Right;
     int op;
 public:
     BinaryExpr(Expr* Left,Expr* Right,int op):Left(Left),Right(Right),op(op) {
@@ -114,10 +119,10 @@ public:
         }
     }
 
-    Expr* getValue() {
+    exprPtr getValue() {
         if(this->getDType() == VALUEBOOL)
         {
-            return new Bool(false);
+            return make_shared<Bool>(false);
         }
         else{
 

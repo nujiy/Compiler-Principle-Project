@@ -6,12 +6,19 @@
 
 using namespace std;
 
+class DeclList;
+class ProtoType;
+
+typedef shared_ptr<DeclList> declListPtr;
+typedef shared_ptr<ProtoType> protoPtr;
+
 class DeclList{
-    vector<Decl*> declList;
+    vector<declPtr> declList;
 public:
     DeclList(){}
     void addDecl(Decl* decl){
-        this->declList.push_back(decl);
+        shared_ptr<Decl> tmp(decl);
+        this->declList.push_back(tmp);
     }
     void Print()
     {
@@ -23,8 +30,8 @@ public:
 
 // 变量声明 type name
 class VariableDecl: public Decl{
-    Expr* name; // identifier
-    Expr* value;
+    exprPtr name; // identifier
+    exprPtr value;
 public:
     VariableDecl(int dType,Expr* name):name(name),value(new Expr()){
         name->setDType(dType);
@@ -47,16 +54,16 @@ public:
 
 // 参数列表声明 type name (params)
 class ParamsList: public Decl{
-    vector<Decl*> params;
+    vector<declPtr> params;
 public:
     ParamsList(){
         this->setDeclType(DECLPARAM);
     }
     ~ParamsList(){}
-    ParamsList(vector<Decl*>& params):params(params){
+    ParamsList(vector<declPtr>& params):params(params){
         this->setDeclType(DECLPARAM);
     }
-    void addParam(Decl* param){
+    void addParam(declPtr param){
         this->params.push_back(param);
     }
     void Print(){
@@ -75,8 +82,8 @@ public:
 
 // 函数原型声明
 class ProtoType: public Decl{
-    Expr* name;
-    DeclList* params;
+    exprPtr name;
+    declListPtr params;
 public:
     ProtoType(int dType,Expr* funcName,DeclList* params):name(funcName),params(params){
         funcName->setDType(dType);
@@ -92,7 +99,7 @@ public:
 };
 
 class ArrayDecl: public Decl{
-    Expr* name;
+    exprPtr name;
     int size;
     int dType;
 public:

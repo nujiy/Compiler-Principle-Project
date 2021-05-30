@@ -2,14 +2,26 @@
 #define COMPILER_STMT_H
 #include <vector>
 #include <iostream>
+#include <memory>
 #include "util.h"
 using namespace std;
 class Stmt;
 class Expr;
 class Decl;
+class StmtReturn;
+class Assignment;
+class StmtList;
+
 void printStmt(Stmt* stmt);
 extern void printExpr(Expr* expr);
 extern void printDecl(Decl* decl);
+
+typedef shared_ptr<Stmt> stmtPtr;
+typedef shared_ptr<StmtList> stmtListPtr;
+typedef shared_ptr<Expr> exprPtr;
+typedef shared_ptr<Decl> declPtr;
+typedef shared_ptr<StmtReturn> returnPtr;
+typedef shared_ptr<Assignment> assignPtr;
 
 // 各类语句
 class Stmt {
@@ -31,12 +43,13 @@ public:
 };
 
 class StmtList {
-    vector<Stmt*> stmtList;
+    vector<stmtPtr> stmtList;
 public:
     StmtList(){
     }
     void addStmt(Stmt* stmt){
-        this->stmtList.push_back(stmt);
+        stmtPtr tmp(stmt);
+        this->stmtList.push_back(tmp);
     }
     void Print(){
         for(int i=0;i<stmtList.size();i++){
@@ -49,7 +62,7 @@ public:
 class Expr: public Stmt{
     int dType;
     int exprType;
-    Expr* valueptr;
+    exprPtr valueptr;
 public:
     Expr(){
         this->dType = -1; // base node
@@ -64,7 +77,7 @@ public:
 
     int getExprType();
 
-    virtual Expr* getValue();
+    virtual exprPtr getValue();
 
     virtual void Print(){
         printExpr(this);
@@ -72,7 +85,7 @@ public:
 };
 
 class StmtReturn: public Stmt{
-    Expr* value;
+    exprPtr value;
 public:
     StmtReturn(Expr* value):value(value){
         this->setStmtType(STMTRETURN);
@@ -104,8 +117,8 @@ public:
 
 // 赋值语句
 class Assignment:public Stmt{
-    Expr* identifier;
-    Expr* expression;
+    exprPtr identifier;
+    exprPtr expression;
 public:
     Assignment(Expr* identifier,Expr* expression):identifier(identifier),expression(expression){
         this->setStmtType(STMTASSIGN);

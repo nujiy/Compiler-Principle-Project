@@ -34,7 +34,7 @@ int Expr::getExprType(){
     return this->exprType;
 }
 
-Expr* Expr::getValue(){
+exprPtr Expr::getValue(){
     if(dType!=EXPRBINARY)
     {
         return valueptr;

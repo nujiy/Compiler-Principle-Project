@@ -7,7 +7,6 @@
 #include "expr.h"
 #include "function.h"
 using namespace std;
-
 class Block{
 public:
     Block(){}
@@ -17,7 +16,7 @@ public:
 
 // 全局成员 包括函数声明与全局变量
 class GlobalPart:public Block {
-    DeclList* decls;
+    declListPtr decls;
 public:
     GlobalPart(DeclList* decls):decls(decls){}
     void Print(){
@@ -27,7 +26,7 @@ public:
 
 // 主函数 main(){...}
 class MainPart:public Block {
-    FuncBody* mainFunc;
+    funcBodyPtr mainFunc;
 public:
     MainPart(FuncBody* mainFunc):mainFunc(mainFunc){}
     void Print(){
@@ -36,7 +35,7 @@ public:
 };
 
 class FuncPart:public Block {
-    FuncList* functions;
+    funcListPtr functions;
 public:
     FuncPart(FuncList* functions):functions(functions){}
     void Print(){
