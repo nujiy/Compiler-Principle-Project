@@ -16,8 +16,8 @@
 
 ```
 <id> -> IDENTIFIER 
-//+(_ | [a-zA-Z])
-<basictype> -> INT | FLOAT | BOOL | CHAR | VOID
+
+<basictype> -> INT | FLOAT | BOOL | VOID | STRING
 
 
 <variable_decl> -> <basictype> <variable> <assignment_initial>
@@ -64,12 +64,8 @@
 ```
 <stmt_list> -> <stmt_list> <stmt> ; | ε
 
-<stmt> -> <assignment> | <func_call> | <variable_decl> | <loop> | <condition> 
-```
+<stmt> -> <assignment> | <func_call> | <variable_decl> | <loop> | <condition> | <stmt_print> | <stmt_scan>
 
-
-
-```
 <assignment> -> <id> = <expression>
 ```
 
@@ -120,3 +116,16 @@
 
 <otherwise> -> ELSE { <stmt_list> } | ε
 ```
+
+
+
+*做保留字*
+
+```
+ //打印的时候只能打印一个表达式
+ <stmt_print> -> PRINT ( <> ，)
+ 
+ //读的时候只能读一个变量
+ <stmt_scan> -> SCAN ( <variable> )
+```
+
