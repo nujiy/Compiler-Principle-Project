@@ -1,56 +1,73 @@
 #ifndef COMPILER_FUNCTION_H
 #define COMPILER_FUNCTION_H
+
 #include <memory>
 #include "decl.h"
 
 class FuncImpl;
+
 class FuncList;
+
 class FuncBody;
 
-typedef shared_ptr<FuncImpl> funcImplPtr;
-typedef shared_ptr<FuncList> funcListPtr;
-typedef shared_ptr<FuncBody> funcBodyPtr;
+typedef unique_ptr<FuncImpl> funcImplPtr;
+typedef unique_ptr<FuncList> funcListPtr;
+typedef unique_ptr<FuncBody> funcBodyPtr;
 
-class FuncBody{
-    stmtListPtr stmts;
-    stmtPtr stmtReturn;
+class FuncBody {
+    vector<stmtPtr> stmts;
+    exprPtr exprReturn;
 public:
-    FuncBody(StmtList* stmts,Stmt* stmtReturn):stmts(stmts),stmtReturn(stmtReturn){}
-    void Print(){
-        cout<<"{"<<endl;
-        stmts->Print();
-        cout<<"return ";
-        stmtReturn->Print();
-        cout<<endl<<"}"<<endl;
+    FuncBody(StmtList *stmts, Expr *exprReturn) {
+        for (int i = 0, e = stmts->stmtList.size(); i < e; i++) {
+            this->stmts.push_back(stmtPtr(stmts->stmtList[i]));
+        }
+        this->exprReturn = exprPtr(exprReturn);
     }
+
+    void Print() {
+        cout << "{" << endl;
+        for (int i = 0, e = stmts.size(); i < e; i++) {
+            stmts[i]->Print();
+        }
+        cout << "return ";
+        exprReturn->Print();
+        cout << endl << "}" << endl;
+    }
+
+    llvm::Value *CodeGen();
+
 };
 
-class FuncImpl{
-    declPtr proto;
+class FuncImpl {
+    protoPtr proto;
     funcBodyPtr funcBody;
 public:
-    FuncImpl(Decl* proto,FuncBody* funcBody):proto(proto),funcBody(funcBody){}
-    void Print(){
+    FuncImpl(Decl *proto, FuncBody *funcBody) {
+        ProtoType *p = static_cast<ProtoType *>(proto);
+        this->proto = protoPtr(p);
+        this->funcBody = funcBodyPtr(funcBody);
+    }
+
+    void Print() {
         proto->Print();
         funcBody->Print();
-        cout<<endl;
+        cout << endl;
     }
+
+    llvm::Value *CodeGen();
 };
 
 // 函数实现体
-class FuncList{
-    vector<funcImplPtr> functions;
+class FuncList {
 public:
-    FuncList(){}
-    void addFunction(FuncImpl* impl){
-        funcImplPtr tmp(impl);
-        this->functions.push_back(tmp);
-    }
+    vector<FuncImpl *> functions;
 
-    void Print(){
-        for(int i = 0;i<functions.size();i++){
-            functions[i]->Print();
-        }
+    FuncList() {}
+
+    void addFunction(FuncImpl *impl) {
+        this->functions.push_back(impl);
     }
 };
+
 #endif //COMPILER_FUNCTION_H

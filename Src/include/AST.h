@@ -7,21 +7,24 @@
 #include "expr.h"
 #include "function.h"
 using namespace std;
+
 class Block{
 public:
     Block(){}
     virtual ~Block(){}
-    virtual void Print() {};
+    virtual void CodeGen() {};
 };
 
 // 全局成员 包括函数声明与全局变量
 class GlobalPart:public Block {
-    declListPtr decls;
+    vector<declPtr> decls;
 public:
-    GlobalPart(DeclList* decls):decls(decls){}
-    void Print(){
-        decls->Print();
+    GlobalPart(DeclList* decls){
+        for(int i = 0,e = decls->declList.size(); i<e;i++){
+            this->decls.push_back(declPtr(decls->declList[i]));
+        }
     }
+    void CodeGen();
 };
 
 // 主函数 main(){...}
@@ -29,18 +32,18 @@ class MainPart:public Block {
     funcBodyPtr mainFunc;
 public:
     MainPart(FuncBody* mainFunc):mainFunc(mainFunc){}
-    void Print(){
-        mainFunc->Print();
-    }
+    void CodeGen();
 };
 
 class FuncPart:public Block {
-    funcListPtr functions;
+    vector<funcImplPtr> functions;
 public:
-    FuncPart(FuncList* functions):functions(functions){}
-    void Print(){
-        functions->Print();
+    FuncPart(FuncList* functions) {
+        for(int i=0,e = functions->functions.size();i<e;i++){
+            this->functions.push_back(funcImplPtr(functions->functions[i]));
+        }
     }
+    void CodeGen();
 };
 
 
@@ -52,12 +55,7 @@ public:
     AST(Block* Global,Block* Main,Block* Function):Global(dynamic_cast<GlobalPart*> (Global)),Main(dynamic_cast<MainPart*> (Main)),Function(dynamic_cast<FuncPart*> (Function)){
         setMap();
     };
-    void Print()
-    {
-        Global->Print();
-        Main->Print();
-        Function->Print();
-    }
+    void CodeGen();
 };
 
 #endif //_AST_H

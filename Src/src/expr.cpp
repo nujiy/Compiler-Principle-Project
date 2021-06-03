@@ -1,4 +1,6 @@
 #include "../include/expr.h"
+static std::map<std::string,idPtr> symbolTable;
+
 void printExpr(Expr* expr){
     int exprType = expr->getExprType();
     if( exprType == EXPRVALUE) {

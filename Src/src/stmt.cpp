@@ -1,5 +1,4 @@
 #include "../include/stmt.h"
-
 void printStmt(Stmt* stmt) {
     int stmtType = stmt->getStmtType();
     switch (stmtType)
@@ -15,31 +14,5 @@ void printStmt(Stmt* stmt) {
             break;
         default:
             break;
-    }
-}
-
-void Expr::setDType(int dType){
-    this->dType = dType;
-}
-
-int Expr::getDType(){
-    return dType;
-}
-
-void Expr::setExprType(int exprType){
-    this->exprType = exprType;
-}
-
-int Expr::getExprType(){
-    return this->exprType;
-}
-
-exprPtr Expr::getValue(){
-    if(dType!=EXPRBINARY)
-    {
-        return valueptr;
-    }
-    else{
-        return valueptr->getValue();
     }
 }

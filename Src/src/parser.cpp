@@ -167,14 +167,14 @@ enum yysymbol_kind_t
   YYSYMBOL_type = 54,                      /* type  */
   YYSYMBOL_value = 55,                     /* value  */
   YYSYMBOL_function_body = 56,             /* function_body  */
-  YYSYMBOL_stmt_return = 57,               /* stmt_return  */
-  YYSYMBOL_stmt_list = 58,                 /* stmt_list  */
-  YYSYMBOL_stmt = 59,                      /* stmt  */
-  YYSYMBOL_assignment = 60,                /* assignment  */
-  YYSYMBOL_func_call = 61,                 /* func_call  */
-  YYSYMBOL_parameterExprs = 62,            /* parameterExprs  */
-  YYSYMBOL_variables = 63,                 /* variables  */
-  YYSYMBOL_expression = 64,                /* expression  */
+  YYSYMBOL_stmt_list = 57,                 /* stmt_list  */
+  YYSYMBOL_stmt = 58,                      /* stmt  */
+  YYSYMBOL_assignment = 59,                /* assignment  */
+  YYSYMBOL_func_call = 60,                 /* func_call  */
+  YYSYMBOL_parameterExprs = 61,            /* parameterExprs  */
+  YYSYMBOL_variables = 62,                 /* variables  */
+  YYSYMBOL_expression = 63,                /* expression  */
+  YYSYMBOL_expr_return = 64,               /* expr_return  */
   YYSYMBOL_relation_expr = 65,             /* relation_expr  */
   YYSYMBOL_relation_op = 66,               /* relation_op  */
   YYSYMBOL_logic_expr = 67,                /* logic_expr  */
@@ -557,8 +557,8 @@ static const yytype_uint8 yyrline[] =
        0,    66,    66,    69,    72,    73,    76,    77,    78,    81,
       83,    86,    87,    90,    93,    96,    97,   100,   101,   103,
      106,   107,   110,   111,   114,   115,   116,   119,   120,   123,
-     126,   127,   128,   129,   132,   133,   136,   137,   138,   139,
-     142,   145,   148,   149,   152,   153,   156,   157,   158,   161,
+     126,   127,   130,   131,   132,   133,   136,   139,   142,   143,
+     146,   147,   150,   151,   152,   155,   156,   157,   158,   161,
      163,   164,   165,   166,   167,   169,   170,   173,   175,   176,
      178,   179,   180,   183,   184,   185,   186,   189,   190,   191,
      192
@@ -585,9 +585,9 @@ static const char *const yytname[] =
   "POW", "$accept", "program", "global", "decl_list", "global_item",
   "main_block", "function", "function_list", "function_impl", "id",
   "variable_decl", "array_decl", "size", "protoType", "parameter_decl",
-  "parameters", "type", "value", "function_body", "stmt_return",
-  "stmt_list", "stmt", "assignment", "func_call", "parameterExprs",
-  "variables", "expression", "relation_expr", "relation_op", "logic_expr",
+  "parameters", "type", "value", "function_body", "stmt_list", "stmt",
+  "assignment", "func_call", "parameterExprs", "variables", "expression",
+  "expr_return", "relation_expr", "relation_op", "logic_expr",
   "logic_term", "logic_op", "arith_expr", "term", "factor", YY_NULLPTR
 };
 
@@ -615,7 +615,7 @@ static const yytype_int16 yytoknum[] =
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-44)
+#define YYTABLE_NINF (-40)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -631,8 +631,8 @@ static const yytype_int8 yypact[] =
      -68,   -68,   -68,   -68,   -24,   -68,    50,    12,   -68,    47,
      -68,    87,    60,   -68,    52,    86,    -3,    88,   -68,   -68,
       90,   -68,   -68,   -68,   -68,   -68,    52,    52,    52,    52,
-      52,    52,   -68,    39,    10,   -68,   -68,    60,    89,    93,
-     -68,   -68,   -68,    69,     6,   -68,   -68,    92,    24,    52,
+      52,    52,   -68,    39,    10,   -68,   -68,    60,    93,   -68,
+     -68,    89,   -68,    69,     6,   -68,   -68,    92,    24,    52,
      -68,    12,    12,   -20,   -68,   -68,   -68,   -68,    96,    24,
       19,   -68,   -68,   -68,    97,    50,   -68,   -68,   -68
 };
@@ -644,15 +644,15 @@ static const yytype_int8 yydefact[] =
 {
        5,     0,     0,     3,     1,     0,    12,    24,    25,    26,
        0,     6,     8,     7,     0,     0,     2,    10,     4,    14,
-      15,     0,    11,     0,     0,    23,     0,     0,    35,     9,
+      15,     0,    11,     0,     0,    23,     0,     0,    31,     9,
       13,     0,     0,     0,    18,     0,     0,    27,    28,    70,
-      68,    69,    16,    47,    48,    56,    46,    62,    66,    33,
-      19,    20,     0,    17,     0,     0,     0,    45,    58,    59,
+      68,    69,    16,    43,    44,    56,    42,    62,    66,    48,
+      19,    20,     0,    17,     0,     0,     0,    41,    58,    59,
        0,    51,    50,    54,    53,    52,     0,     0,     0,     0,
-       0,     0,    32,     0,     0,    38,    39,     0,     0,     0,
-      36,    37,    22,    15,     0,    57,    67,     0,     0,     0,
-      55,    60,    61,    49,    64,    65,    63,    31,     0,     0,
-      15,    29,    34,    41,    42,     0,    30,    40,    44
+       0,     0,    47,     0,     0,    34,    35,     0,     0,    32,
+      33,     0,    22,    15,     0,    57,    67,     0,     0,     0,
+      55,    60,    61,    49,    64,    65,    63,    46,     0,     0,
+      15,    30,    29,    37,    38,     0,    45,    36,    40
 };
 
   /* YYPGOTO[NTERM-NUM].  */
@@ -660,7 +660,7 @@ static const yytype_int8 yypgoto[] =
 {
      -68,   -68,   -68,   -68,   -68,   -68,   -68,   -68,   -68,   -14,
        4,    54,   -68,    83,   -68,   -68,   -13,   -68,    84,   -68,
-     -68,   -68,   -68,    55,   -68,   -68,   -67,   -34,   -68,   -68,
+     -68,   -68,    55,   -68,   -68,   -67,   -68,   -34,   -68,   -68,
       42,   -68,   -35,   -15,     1
 };
 
@@ -668,8 +668,8 @@ static const yytype_int8 yypgoto[] =
 static const yytype_int8 yydefgoto[] =
 {
       -1,     1,     2,     3,    10,     6,    16,    17,    22,    39,
-      11,    12,    35,    13,    32,    33,    14,    40,    29,    78,
-      49,    79,    80,    41,    87,    88,    42,    43,    68,    44,
+      11,    12,    35,    13,    32,    33,    14,    40,    29,    49,
+      78,    79,    41,    87,    88,    42,    81,    43,    68,    44,
       45,    60,    46,    47,    48
 };
 
@@ -687,8 +687,8 @@ static const yytype_int8 yytable[] =
       37,    38,     5,   100,    19,     7,     8,     9,    18,    19,
       94,    95,    96,    37,    38,    61,    62,    19,    63,    64,
       65,    21,   -21,    66,    67,    28,    25,    34,    50,    53,
-      57,    82,    85,    27,   -43,    89,   102,   101,   103,   106,
-      23,   108,    90,    76,    81,     0,     0,    30
+      57,    82,    85,    27,   -39,    89,   101,   102,   103,   106,
+      23,   108,    90,    76,    80,     0,     0,    30
 };
 
 static const yytype_int8 yycheck[] =
@@ -714,13 +714,13 @@ static const yytype_int8 yystos[] =
       42,    48,    49,    51,    54,     5,    44,    45,     3,    17,
       47,     6,    46,    51,    54,     5,     9,    24,     7,    56,
       56,    47,    52,    53,    21,    50,     5,    21,    22,    47,
-      55,    61,    64,    65,    67,    68,    70,    71,    72,    58,
+      55,    60,    63,    65,    67,    68,    70,    71,    72,    57,
        6,    48,    54,    10,     5,    65,    70,     5,    31,    32,
       69,    25,    26,    28,    29,    30,    33,    34,    66,    35,
-      36,    37,     3,    12,    47,    48,    49,    54,    57,    59,
-      60,    61,     4,    47,    70,     6,     6,    62,    63,     5,
-      68,    71,    71,    70,    72,    72,    72,     3,    64,    24,
-      47,     8,     3,     6,    64,    70,     3,    64,     4
+      36,    37,     3,    12,    47,    48,    49,    54,    58,    59,
+      60,    64,     4,    47,    70,     6,     6,    61,    62,     5,
+      68,    71,    71,    70,    72,    72,    72,     3,    63,    24,
+      47,     3,     8,     6,    63,    70,     3,    63,     4
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
@@ -729,8 +729,8 @@ static const yytype_int8 yyr1[] =
        0,    38,    39,    40,    41,    41,    42,    42,    42,    43,
       44,    45,    45,    46,    47,    48,    48,    49,    50,    51,
       52,    52,    53,    53,    54,    54,    54,    55,    55,    56,
-      57,    57,    57,    57,    58,    58,    59,    59,    59,    59,
-      60,    61,    62,    62,    63,    63,    64,    64,    64,    65,
+      57,    57,    58,    58,    58,    58,    59,    60,    61,    61,
+      62,    62,    63,    63,    63,    64,    64,    64,    64,    65,
       66,    66,    66,    66,    66,    67,    67,    68,    69,    69,
       70,    70,    70,    71,    71,    71,    71,    72,    72,    72,
       72
@@ -742,8 +742,8 @@ static const yytype_int8 yyr2[] =
        0,     2,     3,     1,     3,     0,     1,     1,     1,     4,
        1,     2,     0,     2,     1,     2,     4,     5,     1,     5,
        2,     0,     3,     0,     1,     1,     1,     1,     1,     4,
-       3,     2,     1,     0,     3,     0,     1,     1,     1,     1,
-       3,     4,     2,     0,     3,     0,     1,     1,     1,     3,
+       3,     0,     1,     1,     1,     1,     3,     4,     2,     0,
+       3,     0,     1,     1,     1,     3,     2,     1,     0,     3,
        1,     1,     1,     1,     1,     3,     1,     3,     1,     1,
        3,     3,     1,     3,     3,     3,     1,     3,     1,     1,
        1
@@ -1375,123 +1375,123 @@ yyreduce:
 #line 1376 "parser.cpp"
     break;
 
-  case 29: /* function_body: LEFTB stmt_list stmt_return RIGHTB  */
+  case 29: /* function_body: LEFTB stmt_list expr_return RIGHTB  */
 #line 123 "yacc.ypp"
-                                                   {(yyval.funcbody) = new FuncBody((yyvsp[-2].stmtList),(yyvsp[-1].stmt));}
+                                                   {(yyval.funcbody) = new FuncBody((yyvsp[-2].stmtList),(yyvsp[-1].expr));}
 #line 1382 "parser.cpp"
     break;
 
-  case 30: /* stmt_return: RETURN expression SEMICOLON  */
+  case 30: /* stmt_list: stmt_list stmt SEMICOLON  */
 #line 126 "yacc.ypp"
-                                         {(yyval.stmt) = new StmtReturn((yyvsp[-1].expr));}
+                                    {(yyvsp[-2].stmtList)->addStmt((yyvsp[-1].stmt)); (yyval.stmtList) = (yyvsp[-2].stmtList);}
 #line 1388 "parser.cpp"
     break;
 
-  case 31: /* stmt_return: RETURN SEMICOLON  */
+  case 31: /* stmt_list: %empty  */
 #line 127 "yacc.ypp"
-                                   {(yyval.stmt) = new StmtReturn(new Void());}
+                  {(yyval.stmtList) = new StmtList();}
 #line 1394 "parser.cpp"
     break;
 
-  case 32: /* stmt_return: SEMICOLON  */
-#line 128 "yacc.ypp"
-                            {(yyval.stmt) = new StmtReturn(new Void());}
+  case 32: /* stmt: assignment  */
+#line 130 "yacc.ypp"
+                 {(yyval.stmt) = (yyvsp[0].stmt);}
 #line 1400 "parser.cpp"
     break;
 
-  case 33: /* stmt_return: %empty  */
-#line 129 "yacc.ypp"
-                  {(yyval.stmt) = new StmtReturn(new Void());}
+  case 33: /* stmt: func_call  */
+#line 131 "yacc.ypp"
+                    {(yyval.stmt) = (yyvsp[0].expr);}
 #line 1406 "parser.cpp"
     break;
 
-  case 34: /* stmt_list: stmt_list stmt SEMICOLON  */
+  case 34: /* stmt: variable_decl  */
 #line 132 "yacc.ypp"
-                                    {(yyvsp[-2].stmtList)->addStmt((yyvsp[-1].stmt)); (yyval.stmtList) = (yyvsp[-2].stmtList);}
+                        {(yyval.stmt) = (yyvsp[0].decl);}
 #line 1412 "parser.cpp"
     break;
 
-  case 35: /* stmt_list: %empty  */
+  case 35: /* stmt: array_decl  */
 #line 133 "yacc.ypp"
-                  {(yyval.stmtList) = new StmtList();}
+                     {(yyval.stmt) = (yyvsp[0].decl);}
 #line 1418 "parser.cpp"
     break;
 
-  case 36: /* stmt: assignment  */
+  case 36: /* assignment: id ASSIGN expression  */
 #line 136 "yacc.ypp"
-                 {(yyval.stmt) = (yyvsp[0].stmt);}
+                                 {(yyval.stmt) = new Assignment((yyvsp[-2].expr),(yyvsp[0].expr));}
 #line 1424 "parser.cpp"
     break;
 
-  case 37: /* stmt: func_call  */
-#line 137 "yacc.ypp"
-                    {(yyval.stmt) = (yyvsp[0].expr);}
+  case 37: /* func_call: id LEFTP parameterExprs RIGHTP  */
+#line 139 "yacc.ypp"
+                                          {(yyval.expr) = new FuncCall((yyvsp[-3].expr),(yyvsp[-1].exprList));}
 #line 1430 "parser.cpp"
     break;
 
-  case 38: /* stmt: variable_decl  */
-#line 138 "yacc.ypp"
-                        {(yyval.stmt) = (yyvsp[0].decl);}
+  case 38: /* parameterExprs: variables expression  */
+#line 142 "yacc.ypp"
+                                     {(yyvsp[-1].exprList)->addExpr((yyvsp[0].expr)); (yyval.exprList) = (yyvsp[-1].exprList);}
 #line 1436 "parser.cpp"
     break;
 
-  case 39: /* stmt: array_decl  */
-#line 139 "yacc.ypp"
-                     {(yyval.stmt) = (yyvsp[0].decl);}
+  case 39: /* parameterExprs: %empty  */
+#line 143 "yacc.ypp"
+                  {(yyval.exprList) = new ExprList();}
 #line 1442 "parser.cpp"
     break;
 
-  case 40: /* assignment: id ASSIGN expression  */
-#line 142 "yacc.ypp"
-                                 {(yyval.stmt) = new Assignment((yyvsp[-2].expr),(yyvsp[0].expr));}
+  case 40: /* variables: variables expression COMMA  */
+#line 146 "yacc.ypp"
+                                      {(yyvsp[-2].exprList)->addExpr((yyvsp[-1].expr)); (yyval.exprList) = (yyvsp[-2].exprList);}
 #line 1448 "parser.cpp"
     break;
 
-  case 41: /* func_call: id LEFTP parameterExprs RIGHTP  */
-#line 145 "yacc.ypp"
-                                          {(yyval.expr) = new FuncCall((yyvsp[-3].expr),(yyvsp[-1].exprList));}
+  case 41: /* variables: %empty  */
+#line 147 "yacc.ypp"
+                  {(yyval.exprList) = new ExprList();}
 #line 1454 "parser.cpp"
     break;
 
-  case 42: /* parameterExprs: variables expression  */
-#line 148 "yacc.ypp"
-                                     {(yyvsp[-1].exprList)->addExpr((yyvsp[0].expr)); (yyval.exprList) = (yyvsp[-1].exprList);}
+  case 42: /* expression: arith_expr  */
+#line 150 "yacc.ypp"
+                       {(yyval.expr) = (yyvsp[0].expr);}
 #line 1460 "parser.cpp"
     break;
 
-  case 43: /* parameterExprs: %empty  */
-#line 149 "yacc.ypp"
-                  {(yyval.exprList) = new ExprList();}
+  case 43: /* expression: relation_expr  */
+#line 151 "yacc.ypp"
+                            {(yyval.expr) = (yyvsp[0].expr);}
 #line 1466 "parser.cpp"
     break;
 
-  case 44: /* variables: variables expression COMMA  */
+  case 44: /* expression: logic_expr  */
 #line 152 "yacc.ypp"
-                                      {(yyvsp[-2].exprList)->addExpr((yyvsp[-1].expr)); (yyval.exprList) = (yyvsp[-2].exprList);}
+                         {(yyval.expr) = (yyvsp[0].expr);}
 #line 1472 "parser.cpp"
     break;
 
-  case 45: /* variables: %empty  */
-#line 153 "yacc.ypp"
-                  {(yyval.exprList) = new ExprList();}
+  case 45: /* expr_return: RETURN expression SEMICOLON  */
+#line 155 "yacc.ypp"
+                                         {(yyval.expr) = (yyvsp[-1].expr);}
 #line 1478 "parser.cpp"
     break;
 
-  case 46: /* expression: arith_expr  */
+  case 46: /* expr_return: RETURN SEMICOLON  */
 #line 156 "yacc.ypp"
-                       {(yyval.expr) = (yyvsp[0].expr);}
+                                   {(yyval.expr) = nullptr;}
 #line 1484 "parser.cpp"
     break;
 
-  case 47: /* expression: relation_expr  */
+  case 47: /* expr_return: SEMICOLON  */
 #line 157 "yacc.ypp"
-                            {(yyval.expr) = (yyvsp[0].expr);}
+                            {(yyval.expr) = nullptr;}
 #line 1490 "parser.cpp"
     break;
 
-  case 48: /* expression: logic_expr  */
+  case 48: /* expr_return: %empty  */
 #line 158 "yacc.ypp"
-                         {(yyval.expr) = (yyvsp[0].expr);}
+                  {(yyval.expr) = nullptr;}
 #line 1496 "parser.cpp"
     break;
 

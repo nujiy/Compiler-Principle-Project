@@ -1,8 +1,9 @@
 #ifndef COMPILER_UTIL_H
 #define COMPILER_UTIL_H
-#include <map>
 
-using namespace std;
+#include <map>
+#include <string>
+#include <llvm/IR/Value.h>
 
 #define OPADD 0
 #define OPSUB 1
@@ -25,6 +26,7 @@ using namespace std;
 #define VALUECHAR 3
 #define VALUEVOID 4
 #define VALUEARRAY 5
+#define VALUEINVALID 9
 
 #define EXPRID 0    // determine the expr type variable | literal | binary-expression to be calculate
 #define EXPRVALUE 1
@@ -39,9 +41,16 @@ using namespace std;
 #define STMTEXPR 0
 #define STMTASSIGN 1
 #define STMTDECL 2
-#define STMTRETURN 3
+
+#define NODESTMT 0
+#define NODEFUNCTION 1
 
 void setMap();
-string& getTypeMap(int index);
-string& getOpMap(int index);
+
+std::string &getTypeMap(int index);
+
+std::string &getOpMap(int index);
+
+extern llvm::Value *IRError(std::string msg);
+
 #endif //COMPILER_UTIL_H

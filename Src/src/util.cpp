@@ -1,6 +1,6 @@
 #include "../include/util.h"
-map<int,string> typeMap;
-map<int,string> opMap;
+std::map<int,std::string> typeMap;
+std::map<int,std::string> opMap;
 void setMap()
 {
     typeMap[VALUEBOOL] = "Bool";
@@ -23,11 +23,11 @@ void setMap()
     opMap[OPOR] = "|";
 }
 
-string& getTypeMap(int index)
+std::string& getTypeMap(int index)
 {
     return typeMap[index];
 }
 
-string& getOpMap(int index){
+std::string& getOpMap(int index){
     return opMap[index];
 }

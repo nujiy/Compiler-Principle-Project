@@ -53,9 +53,9 @@ int yyerror(const char* s);
 %type <intval> size
 %type <intval> logic_op relation_op
 %type <expr> id value func_call
-%type <expr> expression relation_expr logic_term logic_expr arith_expr term factor
+%type <expr> expression relation_expr logic_term logic_expr expr_return arith_expr term factor
 %type <exprList> variables parameterExprs
-%type <stmt> stmt stmt_return assignment
+%type <stmt> stmt assignment
 %type <stmtList> stmt_list
 %type <funcbody> function_body
 %type <funcImpl> function_impl
@@ -120,13 +120,7 @@ value: INTEGER_VALUE {$$ = new Integer(atoi($1));}
 	| FLOAT_VALUE {$$ = new Float(atof($1));}
 	;
 
-function_body: LEFTB stmt_list  stmt_return RIGHTB {$$ = new FuncBody($2,$3);}
-		;
-
-stmt_return: RETURN expression SEMICOLON {$$ = new StmtReturn($2);}
-		| RETURN SEMICOLON {$$ = new StmtReturn(new Void());}
-		| SEMICOLON {$$ = new StmtReturn(new Void());}
-		| {$$ = new StmtReturn(new Void());}
+function_body: LEFTB stmt_list  expr_return RIGHTB {$$ = new FuncBody($2,$3);}
 		;
 
 stmt_list: stmt_list stmt SEMICOLON {$1->addStmt($2); $$ = $1;}
@@ -157,6 +151,12 @@ expression: arith_expr {$$ = $1;}
             | relation_expr {$$ = $1;}
             | logic_expr {$$ = $1;}
             ;
+
+expr_return: RETURN expression SEMICOLON {$$ = $2;}
+		| RETURN SEMICOLON {$$ = nullptr;}
+		| SEMICOLON {$$ = nullptr;}
+		| {$$ = nullptr;}
+		;
 
 relation_expr: arith_expr relation_op arith_expr {$$ = new BinaryExpr($1,$3,$2);}
 

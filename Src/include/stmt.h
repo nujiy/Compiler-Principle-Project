@@ -1,135 +1,166 @@
 #ifndef COMPILER_STMT_H
 #define COMPILER_STMT_H
+
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <llvm/IR/Value.h>
 #include "util.h"
+
 using namespace std;
+
+class Node;
+
 class Stmt;
+
 class Expr;
+
 class Decl;
-class StmtReturn;
+
 class Assignment;
+
 class StmtList;
 
-void printStmt(Stmt* stmt);
-extern void printExpr(Expr* expr);
-extern void printDecl(Decl* decl);
+void printStmt(Stmt *stmt);
 
-typedef shared_ptr<Stmt> stmtPtr;
-typedef shared_ptr<StmtList> stmtListPtr;
-typedef shared_ptr<Expr> exprPtr;
-typedef shared_ptr<Decl> declPtr;
-typedef shared_ptr<StmtReturn> returnPtr;
-typedef shared_ptr<Assignment> assignPtr;
+extern void printExpr(Expr *expr);
 
-// 各类语句
-class Stmt {
-    int stmtType;
+extern void printDecl(Decl *decl);
+
+typedef unique_ptr<Node> nodePtr;
+typedef unique_ptr<Stmt> stmtPtr;
+typedef unique_ptr<StmtList> stmtListPtr;
+typedef unique_ptr<Expr> exprPtr;
+typedef unique_ptr<Decl> declPtr;
+
+class Node {
+    int nodeType;
 public:
-    Stmt(){}
-    ~Stmt(){}
-    void setStmtType(int stmtType){
-        this->stmtType = stmtType;
+    Node() {}
+
+    void setNodeType(int type) {
+        nodeType = type;
     }
 
-    int getStmtType(){
-        return this->stmtType;
-    }
-
-    virtual void Print(){
-        printStmt(this);
+    int getNodeType() {
+        return nodeType;
     }
 };
 
-class StmtList {
-    vector<stmtPtr> stmtList;
+// 各类语句
+class Stmt : public Node {
+    int stmtType;
 public:
-    StmtList(){
+    Stmt() {
+        this->setNodeType(NODESTMT);
     }
-    void addStmt(Stmt* stmt){
-        stmtPtr tmp(stmt);
-        this->stmtList.push_back(tmp);
+
+    ~Stmt() {}
+
+    void setStmtType(int stmtType) {
+        this->stmtType = stmtType;
     }
-    void Print(){
-        for(int i=0;i<stmtList.size();i++){
-            stmtList[i]->Print();
-        }
+
+    int getStmtType() {
+        return this->stmtType;
+    }
+
+    virtual void Print() {
+        printStmt(this);
+    }
+
+    virtual llvm::Value *CodeGen();
+};
+
+class StmtList {
+public:
+    vector<Stmt *> stmtList;
+
+    StmtList() {}
+
+    void addStmt(Stmt *stmt) {
+        this->stmtList.push_back(stmt);
     }
 };
 
 // 表达式
-class Expr: public Stmt{
-    int dType;
+class Expr : public Stmt {
     int exprType;
     exprPtr valueptr;
 public:
-    Expr(){
+    int dType;
+
+    Expr() {
         this->dType = -1; // base node
         this->setStmtType(STMTEXPR);
     }
-    ~Expr(){}
-    void setDType(int dType);
 
-    int getDType();
+    ~Expr() {}
 
-    void setExprType(int exprType);
+    void setExprType(int exprType) {
+        this->exprType = exprType;
+    }
 
-    int getExprType();
+    int getExprType() {
+        return this->exprType;
+    }
 
-    virtual exprPtr getValue();
+    void setDType(int dType) {
+        this->dType = dType;
+    }
 
-    virtual void Print(){
+    virtual int getDType() {
+        return this->dType;
+    }
+
+    virtual void Print() {
         printExpr(this);
     }
-};
 
-class StmtReturn: public Stmt{
-    exprPtr value;
-public:
-    StmtReturn(Expr* value):value(value){
-        this->setStmtType(STMTRETURN);
-    }
-    void Print(){
-        value->Print();
-    }
+    llvm::Value *CodeGen();
 };
 
 // 声明语句
-class Decl:public Stmt{
+class Decl : public Stmt {
     int declType;
 public:
-    Decl(){
+    Decl() {
         this->setStmtType(STMTDECL);
     }
-    void setDeclType(int declType){
+
+    void setDeclType(int declType) {
         this->declType = declType;
     }
 
-    int getDeclType(){
+    int getDeclType() {
         return this->declType;
     }
 
-    virtual void Print(){
+    virtual void Print() {
         printDecl(this);
     }
+
+    virtual llvm::Value *CodeGen();
 };
 
 // 赋值语句
-class Assignment:public Stmt{
+class Assignment : public Stmt {
     exprPtr identifier;
     exprPtr expression;
 public:
-    Assignment(Expr* identifier,Expr* expression):identifier(identifier),expression(expression){
+    Assignment(Expr *identifier, Expr *expression) : identifier(identifier), expression(expression) {
         this->setStmtType(STMTASSIGN);
-        cout<<"an assignment created"<<endl;
+        cout << "an assignment created" << endl;
     }
-    void Print(){
+
+    void Print() {
         identifier->Print();
-        cout<<"=";
+        cout << "=";
         expression->Print();
-        cout<<endl;
+        cout << endl;
     }
+
+    llvm::Value *CodeGen();
 };
 
 #endif //COMPILER_STMT_H
