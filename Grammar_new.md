@@ -59,28 +59,6 @@
 
 
 
-
-
-```
-	<loop> -> <for_loop> | <while_loop>
-
-	<for_loop> -> FOR (<assignment>; <expression> ; <assignment> ) { <stmt_list> }
-
-	<while_loop> -> WHILE ( <expression> ) { <stmt_list> }
-
-//break要不要加进去
-```
-
-
-
-```
-<condition> -> IF ( <expresion> ) { <stmt_list> } <o
-			 | IF ( <expresion> ) { <stmt_list> } ELSE { <stmt_list> }
-
-```
-
-
-
 *做保留字*
 
 ```
@@ -94,6 +72,27 @@
 
 
 
+
+👆没有Tab的语法就是没修改
+
+👇是在yacc和AST中修改好的
+
+
+
+
+
+```
+<condition> -> IF ( <expresion> ) { <stmt_list> }
+			 | IF ( <expresion> ) { <stmt_list> } ELSE { <stmt_list> }
+			 
+	<loop> -> <for_loop> | <while_loop>
+
+	<for_loop> -> FOR (<assignment>; <expression> ; <assignment> ) { <stmt_list> }
+
+	<while_loop> -> WHILE ( <expression> ) { <stmt_list> }
+
+//break要不要加进去
+```
 
 
 
