@@ -1,0 +1,26 @@
+int N = 10001;
+int partition(int arr[], int low, int high);
+void quickSort(int arr[], int start, int end);
+main(){
+    int i;
+    int j;
+    int n;
+
+    printf("QuickSort Test");
+    int arr[10001];
+    for(i=0;i<n;i=i+1)
+    {
+        scanf("%d",arr[i]);
+        if(low<high)
+        {
+            arr[low] = arr[high];
+            low = low+1;
+        }
+    }
+
+    if(low<high)
+    {
+        arr[low] = arr[high];
+        low = low+1;
+    }
+}

@@ -1,0 +1,234 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <iostream>
+#include <string>
+#include "../include/AST.h"
+#include "../include/FlexLexer.h"
+using namespace std;
+
+AST* program; // total program
+extern int yyparse(yyFlexLexer* yyflex);
+int yyerror(const char* s);
+%}
+
+%union
+{
+	Block* block;
+
+	int dataType;
+	int intval;
+	Decl* decl;
+	DeclList* declList;
+	Stmt* stmt;
+	StmtList* stmtList;
+	Expr* expr;
+	ExprList* exprList;
+
+	FuncBody* funcbody;
+	FuncImpl* funcImpl;
+	FuncList* funcList;
+	char Char;
+	char Op;
+	char* valueStr;
+    string* Str;
+}
+
+%token SEMICOLON COMMA LEFTP RIGHTP LEFTB RIGHTB LEFTSB RIGHTSB
+%token MAIN RETURN FOR WHILE IF ELSE BREAK
+%token <Str> IDENTIFIER STRING_VALUE
+%token <valueStr> INT FLOAT BOOL VOID STRING
+%token <valueStr> INTEGER_VALUE FLOAT_VALUE BOOL_VALUE FALSE TRUE
+
+%token ASSIGN GT LT EQ NEQ EGT ELT AND OR
+%left <Op> ADD SUB
+%left <Op> MUL DIV
+%left <Op> POW
+
+%type <block> global main_block function
+%type <decl> global_item protoType variable_decl array_decl parameter
+%type <declList> decl_list parameters parameter_decl
+%type <dataType> type
+%type <intval> size
+%type <intval> logic_op relation_op
+%type <expr> id left_id value func_call
+%type <expr> expression relation_expr logic_term logic_expr expr_return arith_expr term factor
+%type <exprList> variables parameterExprs
+%type <stmt> stmt assignment loop condition for_loop while_loop
+%type <stmtList> stmt_list
+%type <funcbody> function_body
+%type <funcImpl> function_impl
+%type <funcList> function_list
+%start program
+%%
+
+program: global main_block function {program = new AST($1,$2,$3);}
+		;
+
+global: decl_list {$$ = new GlobalPart($1);}
+		;
+
+decl_list: decl_list global_item SEMICOLON {$$->addDecl($2); $$ = $1;}
+			| {$$ = new DeclList();}
+			;
+
+global_item: variable_decl {$$ = $1;}
+		|	protoType {$$ = $1;}
+		|   array_decl {$$ = $1;}
+		;
+
+main_block: MAIN LEFTP RIGHTP function_body {$$ = new MainPart($4);};
+
+function: function_list {$$ = new FuncPart($1);}
+		;
+
+function_list: function_list function_impl {$1->addFunction($2); $$ = $1;}
+		| {$$ = new FuncList();}
+		;
+
+function_impl: protoType function_body {$$ = new FuncImpl($1,$2);}
+		;
+
+id: IDENTIFIER {$$ = new Identifier(*$1);}
+    ;
+
+variable_decl: type id	{$$ = new VariableDecl($1,$2);}
+		| type id ASSIGN expression {$$ = new VariableDecl($1,$2,$4);}
+		;
+
+array_decl: type id LEFTSB size RIGHTSB {$$ = new ArrayDecl($1,$2,$4);}
+           | type id LEFTSB RIGHTSB {$$ = new ArrayDecl($1,$2);}
+size: INTEGER_VALUE {$$ = atoi($1);}
+
+protoType: type id LEFTP parameter_decl RIGHTP {$$ = new ProtoType($1,$2,$4);}
+		;
+
+parameter_decl: parameters parameter {$1->addDecl($2); $$ = $1;}
+		| {$$ = new DeclList();}
+		;
+
+parameters: parameters parameter COMMA {$1->addDecl($2); $$ = $1;}
+		| {$$ = new DeclList();}
+		;
+
+parameter: variable_decl {$$ = $1;}
+        | array_decl {$$ = $1;}
+
+type: INT {$$ = VALUEINT;}
+	| FLOAT {$$ = VALUEFLOAT;}
+	| BOOL {$$ = VALUEBOOL;}
+	| VOID {$$ = VALUEVOID;}
+	| STRING {$$ = VALUESTRING;}
+	;
+
+value: INTEGER_VALUE {$$ = new Integer(atoi($1));}
+	| FLOAT_VALUE {$$ = new Float(atof($1));}
+	| FALSE {$$ = new Bool(false);}
+	| TRUE {$$ = new Bool(true);}
+	| STRING_VALUE {$$ = new String(*$1);}
+	;
+
+function_body: LEFTB stmt_list  expr_return RIGHTB {$$ = new FuncBody($2,$3);}
+		;
+
+stmt_list: stmt_list stmt SEMICOLON {$1->addStmt($2); $$ = $1;}
+        | stmt_list loop {$1->addStmt($2); $$ = $1;}
+        | stmt_list condition {$1->addStmt($2); $$ = $1;}
+		| {$$ = new StmtList();}
+		;
+
+stmt: assignment {$$ = $1;}
+	| func_call {$$ = $1;}
+	| variable_decl {$$ = $1;}
+	| array_decl {$$ = $1;}
+	;
+
+assignment: left_id ASSIGN expression {$$ = new Assignment($1,$3);}
+		;
+
+func_call: id LEFTP parameterExprs RIGHTP {$$ = new FuncCall($1,$3);}
+		;
+
+parameterExprs: variables expression {$1->addExpr($2); $$ = $1;}
+		| {$$ = new ExprList();}
+		;
+
+variables: variables expression COMMA {$1->addExpr($2); $$ = $1;}
+		| {$$ = new ExprList();}
+		;
+
+loop : for_loop {$$ = $1;}
+	 | while_loop {$$ = $1;}
+
+for_loop : FOR LEFTP assignment SEMICOLON relation_expr SEMICOLON assignment RIGHTP LEFTB stmt_list RIGHTB {
+	$$ = new ForLoop($3,$5,$7,$10);
+}
+
+while_loop : WHILE LEFTP expression RIGHTP LEFTB stmt_list RIGHTB {
+	$$ = new WhileLoop($3,$6);
+}
+
+condition : IF LEFTP relation_expr RIGHTP LEFTB stmt_list RIGHTB{$$ =new Condition($3,$6);}
+	| IF LEFTP relation_expr RIGHTP LEFTB stmt_list RIGHTB ELSE LEFTB stmt_list RIGHTB {$$ = new ConditionOtherwise($3,$6,$10);}
+
+
+expression: arith_expr {$$ = $1;}
+            | relation_expr {$$ = $1;}
+            | logic_expr {$$ = $1;}
+            ;
+
+expr_return: RETURN expression SEMICOLON {$$ = $2;}
+		| RETURN SEMICOLON {$$ = new Void();}
+		| SEMICOLON {$$ = new Void();}
+		| {$$ = new Void();}
+		;
+
+relation_expr: arith_expr relation_op arith_expr {$$ = new BinaryExpr($1,$3,$2);}
+
+relation_op: LT {$$ = OPLT;}
+            | GT {$$ = OPGT;}
+            | ELT {$$ = OPELT;}
+            | EGT {$$ = OPEGT;}
+            | NEQ {$$ = NEQ;}
+
+logic_expr: logic_expr logic_op logic_term{$$ = new BinaryExpr($1,$3,$2);}
+            | logic_term {$$ = $1;}
+            ;
+
+logic_term: LEFTP relation_expr RIGHTP {$$ = $2;}
+            ;
+logic_op: AND {$$ = OPAND;}
+            | OR {$$ = OPOR;}
+            ;
+arith_expr: arith_expr ADD term {$$ = new BinaryExpr($1,$3,OPADD);}
+	| arith_expr SUB term {$$ = new BinaryExpr($1,$3,OPSUB);}
+	| term {$$ = $1;}
+	;
+
+term: term POW factor {$$ = new BinaryExpr($1,$3,OPPOW); }
+	| term MUL factor {$$ = new BinaryExpr($1,$3,OPMUL); }
+	| term DIV factor {$$ = new BinaryExpr($1,$3,OPDIV); }
+	| factor {$$ = $1; }
+	;
+
+left_id: id {$$ = $1;}
+        | id LEFTSB expression RIGHTSB {$$ = new ArrayExpr($1,$3);}
+
+factor: LEFTP arith_expr RIGHTP {$$ = $2; }
+	| value {$$ = $1;}
+	| func_call {$$ = $1;}
+	| left_id {$$ = $1;}
+	;
+
+%%
+
+int yyerror(const char *s){
+	cout<<s<<endl;
+	return 0;
+}
+
+/*
+array_decl: type id LEFTSB size RIGHTSB {$$ = new ArrayDecl($1,$2,$4);}
+size: INTEGER_VALUE {$$ = atoi($1);}
+*/
