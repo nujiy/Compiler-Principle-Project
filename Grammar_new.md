@@ -1,23 +1,11 @@
-```
-<program> -> <global> <main_block> <function>
-
-<main_block> -> MAIN ( ) <function_body> 
-
-<global> -> <decl_list>
-<decl_list> -> <decl_list> <global_item> ;
-<global_item> -> <variable_decl> | <protoType> 
-
-<protoType> -> <basictype> <id> ( <parameter_decl> )
-```
-
 
 
 👇增加数组操作，修改赋值，可以赋一组值
 
 ```
-<id> -> IDENTIFIER 
+	<id> -> IDENTIFIER 
 
-<basictype> -> INT | FLOAT | BOOL | VOID | STRING
+	<basictype> -> INT | FLOAT | BOOL | VOID | STRING
 
 
 <variable_decl> -> <basictype> <variable> <assignment_initial>
@@ -42,8 +30,8 @@
 
 
 ```
-<parameter_decl> -> <variable_decl> <parameters> | ε 
-<parameters> -> ,<variable_decl> <parameters> | ε 
+	<parameter_decl> -> <variable_decl> <parameters> | ε 
+	<parameters> -> ,<variable_decl> <parameters> | ε 
 
 
 <func_call> -> <id> ( <parameterID_list> ) 
@@ -51,23 +39,79 @@
 <parameterIDs> -> ,<expression> <parameterIDs> | ε
 
 
-<function> -> <function_list> 
-<function_list> -> <function_list> <function_impl> 
-<function_impl> -> <protoType> <function_body> 
-<function_body> -> { <stmt_list> <stmt_return> }
+	<function> -> <function_list> 
+	<function_list> -> <function_list> <function_impl> 
+	<function_impl> -> <protoType> <function_body> 
+	<function_body> -> { <stmt_list> <stmt_return> }
 
-<stmt_return> -> return <expression> ;
+	<stmt_return> -> return <expression> ;
 ```
 
 
 
 ```
-<stmt_list> -> <stmt_list> <stmt> ; | ε
+	<stmt_list> -> <stmt_list> <stmt> ; | ε
 
-<stmt> -> <assignment> | <func_call> | <variable_decl> | <loop> | <condition> | <stmt_print> | <stmt_scan>
+	<stmt> -> <assignment> | <func_call> | <variable_decl> | <loop> | <condition> | <stmt_print> | <stmt_scan> | <condition_with_otherwise>
 
-<assignment> -> <id> = <expression>
+<assignment> -> <variable> = <expression>
 ```
+
+
+
+
+
+```
+	<loop> -> <for_loop> | <while_loop>
+
+	<for_loop> -> FOR (<assignment>; <expression> ; <assignment> ) { <stmt_list> }
+
+	<while_loop> -> WHILE ( <expression> ) { <stmt_list> }
+
+//break要不要加进去
+```
+
+
+
+```
+<condition> -> IF ( <expresion> ) { <stmt_list> } <o
+			 | IF ( <expresion> ) { <stmt_list> } ELSE { <stmt_list> }
+
+```
+
+
+
+*做保留字*
+
+```
+ //打印的时候只能打印一个表达式
+ <stmt_print> -> PRINT ( <> ，)
+ 
+ //读的时候只能读一个变量
+ <stmt_scan> -> SCAN ( <variable> )
+```
+
+
+
+
+
+
+
+
+
+```
+	<program> -> <global> <main_block> <function>
+
+	<main_block> -> MAIN ( ) <function_body> 
+
+	<global> -> <decl_list>
+	<decl_list> -> <decl_list> <global_item> ;
+	<global_item> -> <variable_decl> | <protoType> 
+
+	<protoType> -> <basictype> <id> ( <parameter_decl> )
+```
+
+
 
 
 
@@ -95,37 +139,5 @@
 <value> -> <INTEGER_VALUE> | <FLOAT_VALUE> 
 <INTEGER_VALUE> -> -?(0|[1-9][0-9]*)
 <FLOAT_VALUE> ->[0-9]+|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)?
-```
-
-
-
-```
-<loop> -> <for_loop> | <while_loop>
-
-<for_loop> -> FOR (<assignment>; <expression> ; <assignment> ) { <stmt_list> }
-
-<while_loop> -> WHILE ( <expression> ) { <stmt_list> }
-
-//break要不要加进去
-```
-
-
-
-```
-<condition> -> IF ( <expresion> ) { <stmt_list> } <otherwise>
-
-<otherwise> -> ELSE { <stmt_list> } | ε
-```
-
-
-
-*做保留字*
-
-```
- //打印的时候只能打印一个表达式
- <stmt_print> -> PRINT ( <> ，)
- 
- //读的时候只能读一个变量
- <stmt_scan> -> SCAN ( <variable> )
 ```
 

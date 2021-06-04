@@ -41,6 +41,11 @@ using namespace std;
 Float {return FLOAT;}
 Int {return INT;}
 Bool { return BOOL;}
+Void {return VOID;}
+String {returen STRING;}
+true {return TRUE;}
+false {return FALSE;}
+break {return BREAK;}
 
 main { return MAIN;}
 return {return RETURN;}

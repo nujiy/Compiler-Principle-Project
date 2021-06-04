@@ -22,9 +22,14 @@ typedef shared_ptr<Expr> exprPtr;
 typedef shared_ptr<Decl> declPtr;
 typedef shared_ptr<StmtReturn> returnPtr;
 typedef shared_ptr<Assignment> assignPtr;
+typedef shared_ptr<For_loop> for_loopPtr;
+typedef shared_ptr<While_loop> while_loopPtr;
+typedef shared_ptr<Condition> conditionPtr;
+typedef shared_ptr<Condition_with_otherwise> condition_with_otherwisePtr;
 
-// 各类语句
-class Stmt {
+    // 各类语句
+    class Stmt
+{
     int stmtType;
 public:
     Stmt(){}
@@ -43,7 +48,7 @@ public:
 };
 
 class StmtList {
-    vector<stmtPtr> stmtList;
+    vector <stmtPtr> stmtList;
 public:
     StmtList(){
     }
@@ -132,4 +137,88 @@ public:
     }
 };
 
+class While_loop:public Stmt{
+    exprPtr expression;
+    stmtListPtr stmtlist;
+public:
+    While_loop(Expr* expression,Expr* stmtlist):expression(expression),stmtlist(stmtlist){
+        this->setStmtType(STMTWHILE);
+        cout << "a while loop created" << endl;
+    }
+    void Print(){
+        cout << " while (";
+        expression->Print();
+        cout << ")" << endl;
+        cout << "{";
+        stmtlist->Print();
+        cout << "}" << endl;
+    }
+};
+
+class For_loop:public Stmt{
+    exprPtr expression;
+    assignPtr assignment_1, assignment_2;
+    stmtListPtr stmtlist;
+public:
+    For_loop(Expr* assignment_1, Expr* expression, Expr* assignment_2,Expr* stmtlist): assignment_1(assignment_1) ,expression(expression), assignment_2(assignment_2),stmtlist(stmtlist)
+    {
+        this->setStmtType(STMTFOR);
+        cout << "a for loop created" << endl;
+    }
+    void Print(){
+        cout << "for (";
+        assignment_1->Print();
+        cout << ";";
+        expression->Print();
+        cout << ";";
+        assignment_2->Print();
+        cout << ")" << endl
+             << "{" << endl;
+        stmtlist->Print();
+        cout << "}" << endl;
+    }
+};
+
+class Condition :public Stmt
+{
+    exprPtr expression;
+    stmtListPtr stmtlist;
+public:
+    Condition(Expr* expression, Expr * stmtlist):expression(expression),stmtlist(stmtlist){
+        this->setStmtType(STMTCONDITION);
+        cout << "a condition created" << endl;
+    }
+    void Print(){
+        cout << "if (";
+        expression->Print();
+        cout << ")" << endl
+             << "{";
+        stmtlist->Print();
+        cout << "}" << endl;
+    }
+};
+
+class Condition_with_otherwise : public Stmt
+{
+    exprPtr expression;
+    stmtListPtr stmtlist_1, stmtlist_2;
+
+public:
+    Condition_with_otherwise(Expr * expression,Expr * stmtlist_1,Expr * stmtlist_2):expression(expression),stmtlist_1(stmtlist_1),stmtlist_2(stmtlist_2) {
+        this->setStmtType(STMTCONDITION_WITH_OTHERWISE);
+        cout << "a condition with otherwise created" << endl;
+    }
+    void Print(){
+        cout << "if (";
+        expression->Print();
+        cout << ")" << endl
+             << "{";
+        stmtlist_1->Print();
+        cout << "}" << endl
+             << "else"
+             << "{" << endl;
+        stmtlist_2->Print();
+        cout << "}" << endl;
+    }
+};
 #endif //COMPILER_STMT_H

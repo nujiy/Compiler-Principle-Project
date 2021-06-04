@@ -40,7 +40,10 @@ using namespace std;
 #define STMTASSIGN 1
 #define STMTDECL 2
 #define STMTRETURN 3
-
+#define STMTFOR 4
+#define STMTWHILE 5
+#define STMTCONDITION 6
+#define STMTCONDITION_WITH_OTHERWISE 7
 void setMap();
 string& getTypeMap(int index);
 string& getOpMap(int index);
