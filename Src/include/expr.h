@@ -99,6 +99,24 @@ public:
     llvm::Value *CodeGen();
 };
 
+class String: public ValueExpr {
+    string value;
+public:
+    String(string& value){
+        if(value.length() == 2)
+            this->value = "";
+        else
+            this->value = value.substr(1,value.length()-2);
+        this->setValueType(VALUESTRING);
+    }
+
+    void Print() {
+        cout << value;
+    }
+
+    llvm::Value *CodeGen();
+
+};
 // identifier
 class Identifier : public Expr {
     std::string &identifier;
@@ -175,4 +193,20 @@ public:
     llvm::Value *CodeGen();
 };
 
+class ArrayExpr: public Expr {
+    idPtr id;
+    exprPtr index;
+public:
+    ArrayExpr(Expr* id,Expr* index){
+        this->id = idPtr(static_cast<Identifier*>(id));
+        this->index = exprPtr(index);
+    }
+
+    void Print() {
+        id->Print();
+        cout<<'['<<endl;
+        index->Print();
+        cout << "]";
+    }
+};
 #endif //COMPILER_EXPR_H

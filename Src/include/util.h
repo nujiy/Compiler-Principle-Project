@@ -26,6 +26,7 @@
 #define VALUECHAR 3
 #define VALUEVOID 4
 #define VALUEARRAY 5
+#define VALUESTRING 6
 #define VALUEINVALID 9
 
 #define EXPRID 0    // determine the expr type variable | literal | binary-expression to be calculate
@@ -41,7 +42,10 @@
 #define STMTEXPR 0
 #define STMTASSIGN 1
 #define STMTDECL 2
-
+#define STMTFOR 4
+#define STMTWHILE 5
+#define STMTCONDITION 6
+#define STMTCONDITION_WITH_OTHERWISE 7
 #define NODESTMT 0
 #define NODEFUNCTION 1
 

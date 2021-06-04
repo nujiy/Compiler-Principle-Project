@@ -116,8 +116,15 @@ public:
     ArrayDecl(int dType, Expr *arrayName, int size) : dType(dType), size(size) {
         Identifier *p = static_cast<Identifier *>(arrayName);
         this->name = idPtr(p);
-        arrayName->setDType(VALUEARRAY);
+        this->name->setDType(VALUEARRAY);
         this->setDeclType(DECLARRAY);
+    }
+
+    ArrayDecl(int dType,Expr* arrayName):dType(dType){
+        this->name = idPtr(static_cast<Identifier*>(arrayName));
+        this->name->setDType(VALUEARRAY);
+        this->setDeclType(DECLARRAY);
+        this->size = -1;
     }
 
     void Print() {

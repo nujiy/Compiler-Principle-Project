@@ -25,6 +25,11 @@ public:
         }
     }
     void CodeGen();
+    void Print(){
+        for(int i=0,e=decls.size();i<e;i++){
+            decls[i]->Print();
+        }
+    }
 };
 
 // 主函数 main(){...}
@@ -33,6 +38,9 @@ class MainPart:public Block {
 public:
     MainPart(FuncBody* mainFunc):mainFunc(mainFunc){}
     void CodeGen();
+    void Print(){
+        mainFunc->Print();
+    }
 };
 
 class FuncPart:public Block {
@@ -44,6 +52,11 @@ public:
         }
     }
     void CodeGen();
+    void Print(){
+        for(int i=0,e=functions.size();i<e;i++){
+            functions[i]->Print();
+        }
+    }
 };
 
 
@@ -55,6 +68,11 @@ public:
     AST(Block* Global,Block* Main,Block* Function):Global(dynamic_cast<GlobalPart*> (Global)),Main(dynamic_cast<MainPart*> (Main)),Function(dynamic_cast<FuncPart*> (Function)){
         setMap();
     };
+    void Print(){
+        Global->Print();
+        Main->Print();
+        Function->Print();
+    }
     void CodeGen();
 };
 

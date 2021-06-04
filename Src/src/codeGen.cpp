@@ -239,6 +239,10 @@ void FuncPart::CodeGen() {
     }
 }
 
+Value *Void::CodeGen(){
+    return nullptr;
+}
+
 Value *Expr::CodeGen() {
     return ExprCodeGen(this);
 }
@@ -253,6 +257,10 @@ Value *Float::CodeGen() {
 
 Value *Bool::CodeGen() {
     return ConstantInt::get(TypeGen(VALUEBOOL), value, false);
+}
+
+Value *String::CodeGen() {
+    return nullptr;
 }
 
 Value *Identifier::CodeGen() {

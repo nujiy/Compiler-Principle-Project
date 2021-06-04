@@ -68,27 +68,33 @@ extern int yydebug;
     WHILE = 269,                   /* WHILE  */
     IF = 270,                      /* IF  */
     ELSE = 271,                    /* ELSE  */
-    IDENTIFIER = 272,              /* IDENTIFIER  */
-    INT = 273,                     /* INT  */
-    FLOAT = 274,                   /* FLOAT  */
-    BOOL = 275,                    /* BOOL  */
-    INTEGER_VALUE = 276,           /* INTEGER_VALUE  */
-    FLOAT_VALUE = 277,             /* FLOAT_VALUE  */
-    BOOL_VALUE = 278,              /* BOOL_VALUE  */
-    ASSIGN = 279,                  /* ASSIGN  */
-    GT = 280,                      /* GT  */
-    LT = 281,                      /* LT  */
-    EQ = 282,                      /* EQ  */
-    NEQ = 283,                     /* NEQ  */
-    EGT = 284,                     /* EGT  */
-    ELT = 285,                     /* ELT  */
-    AND = 286,                     /* AND  */
-    OR = 287,                      /* OR  */
-    ADD = 288,                     /* ADD  */
-    SUB = 289,                     /* SUB  */
-    MUL = 290,                     /* MUL  */
-    DIV = 291,                     /* DIV  */
-    POW = 292                      /* POW  */
+    BREAK = 272,                   /* BREAK  */
+    IDENTIFIER = 273,              /* IDENTIFIER  */
+    STRING_VALUE = 274,            /* STRING_VALUE  */
+    INT = 275,                     /* INT  */
+    FLOAT = 276,                   /* FLOAT  */
+    BOOL = 277,                    /* BOOL  */
+    VOID = 278,                    /* VOID  */
+    STRING = 279,                  /* STRING  */
+    INTEGER_VALUE = 280,           /* INTEGER_VALUE  */
+    FLOAT_VALUE = 281,             /* FLOAT_VALUE  */
+    BOOL_VALUE = 282,              /* BOOL_VALUE  */
+    FALSE = 283,                   /* FALSE  */
+    TRUE = 284,                    /* TRUE  */
+    ASSIGN = 285,                  /* ASSIGN  */
+    GT = 286,                      /* GT  */
+    LT = 287,                      /* LT  */
+    EQ = 288,                      /* EQ  */
+    NEQ = 289,                     /* NEQ  */
+    EGT = 290,                     /* EGT  */
+    ELT = 291,                     /* ELT  */
+    AND = 292,                     /* AND  */
+    OR = 293,                      /* OR  */
+    ADD = 294,                     /* ADD  */
+    SUB = 295,                     /* SUB  */
+    MUL = 296,                     /* MUL  */
+    DIV = 297,                     /* DIV  */
+    POW = 298                      /* POW  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -118,7 +124,7 @@ union YYSTYPE
 	char* valueStr;
     string* Str;
 
-#line 122 "../include/parser.hpp"
+#line 128 "../include/parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

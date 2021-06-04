@@ -1,14 +1,26 @@
-Int i = 0;
-Int j = 1;
-Float testFunction(Int a,Int b);
-
+int N = 10001;
+int partition(int arr[], int low, int high);
+void quickSort(int arr[], int start, int end);
 main(){
-Int i = 10;
-Int j = 20;
+    int i;
+    int j;
+    int n;
 
-testFunction(i,j);
-}
+    printf("QuickSort Test");
+    int arr[10001];
+    for(i=0;i<n;i=i+1)
+    {
+        scanf("%d",arr[i]);
+        if(low<high)
+        {
+            arr[low] = arr[high];
+            low = low+1;
+        }
+    }
 
-Float testFunction(Int a,Int b){
-    return (a+b)*b;
+    if(low<high)
+    {
+        arr[low] = arr[high];
+        low = low+1;
+    }
 }
