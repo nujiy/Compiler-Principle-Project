@@ -21,7 +21,7 @@ int main() {
 
     yyparse(yyflex);
     if (program != nullptr)
-        program->Print();
+        program->CodeGen();
     else
         cout << "no program scanned" << endl;
     fileIn->close();

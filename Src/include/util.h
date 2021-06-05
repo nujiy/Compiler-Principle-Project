@@ -33,6 +33,7 @@
 #define EXPRVALUE 1
 #define EXPRBINARY 2
 #define EXPRFUNCCALL 3
+#define EXPRARRAY 4
 
 #define DECLVARIABLE 0
 #define DECLPROTO 1

@@ -22,6 +22,7 @@ using namespace std;
 \} {return RIGHTB;}
 , {return COMMA;}
 ; {return SEMICOLON;}
+: {return COLON;}
 
 = {return ASSIGN;}
 \+ {return ADD;}
@@ -32,7 +33,7 @@ using namespace std;
 > {return GT;}
 \< {return LT;}
 == {return EQ;}
-\<> {return NEQ;}
+\<> {cout<<"<>"<<endl;return NEQ;}
 \<= {return ELT;}
 >= {return EGT;}
 \| {return OR;}
@@ -49,6 +50,8 @@ main { return MAIN;}
 return {return RETURN;}
 while {return WHILE;}
 for {return FOR;}
+in {return IN;}
+to {return TO;}
 if {return IF;}
 else {return ELSE;}
 false {return FALSE;}

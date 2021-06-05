@@ -37,7 +37,7 @@
 
 using namespace llvm;
 
-static AllocaInst *createEntryBlockAlloca(Function *function, const std::string &name);
+static AllocaInst *createEntryBlockAlloca(Function *function, Value* size ,const std::string &name, Type *type);
 
 static Function *getFunction(std::string name);
 
@@ -47,7 +47,7 @@ Value *StmtCodeGen(Stmt *stmt);
 
 Value *ExprCodeGen(Expr *expr);
 
-Type *TypeGen(int type);
+Type *TypeGen(int type,int size);
 
 bool CheckArith(int, int, int *);
 
@@ -58,8 +58,19 @@ bool CheckLogic(int, int);
 class SymbolTable {
     std::vector<std::map<std::string,AllocaInst*>*> namedValue;   // address map
     std::vector<std::map<string,Identifier*>*> tables;  // id map
+    std::vector<std::map<string,ArrayDecl*>*> arrays;
 public:
     SymbolTable(){}
+
+    AllocaInst* findVar(Expr* id,int size){
+        if(id->getExprType() == EXPRID){
+            return findVar(static_cast<Identifier*>(id)->getId());
+        }
+
+        if(id->getExprType() == EXPRARRAY){
+            return findVar(static_cast<ArrayExpr*>(id)->getId());
+        }
+    }
 
     AllocaInst* findVar(string name){
         for(int i=namedValue.size()-1;i>=0;i--){
@@ -77,6 +88,14 @@ public:
         return nullptr; //can't find
     }
 
+    ArrayDecl* findArray(string name){
+        for(int i= arrays.size()-1;i>=0;i--){
+            if(arrays[i]->find(name) != arrays[i]->end())
+                return (*arrays[i])[name];
+        }
+        return nullptr;
+    }
+
     void addVar(string name,AllocaInst* var){
         if(namedValue.size() <= 0)
             pushVarTable();
@@ -84,10 +103,18 @@ public:
         (*namedValue.back())[name] = var;
     }
 
+
     void addSymbol(string name,Identifier* id){
         if(tables.size() <= 0)
             pushSymbolTable();
         (*tables.back())[name] = id;
+    }
+
+    void addArray(string name,ArrayDecl* array){
+        if(arrays.size()<=0)
+            pushArrayTable();
+
+        (*arrays.back())[name] = array;
     }
 
     void pushVarTable(){
@@ -96,6 +123,10 @@ public:
 
     void pushSymbolTable(){
         tables.push_back(new std::map<string,Identifier*>());
+    }
+
+    void pushArrayTable(){
+        arrays.push_back(new std::map<string,ArrayDecl*>());
     }
 
     void popVarTable(){
@@ -107,6 +138,11 @@ public:
     void popSymbolTable(){
         if(tables.size()>0)
             tables.pop_back();
+    }
+
+    void popArrayTable(){
+        if(arrays.size()>0)
+            arrays.pop_back();
     }
 };
 

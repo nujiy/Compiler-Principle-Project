@@ -12,7 +12,7 @@ static SymbolTable localSymbolTable;
 static std::map<std::string, Identifier *> globalSymbolTable;
 static std::map<std::string, GlobalVariable*> globalValue;
 
-Type *TypeGen(int type) {
+Type *TypeGen(int type,int size = 0) {
     switch (type) {
         case VALUEINT:
             return Type::getInt32Ty(context);
@@ -22,9 +22,8 @@ Type *TypeGen(int type) {
             return Type::getInt1Ty(context);
         case VALUEVOID:
             return Type::getVoidTy(context);
-        case VALUEARRAY:
-            return Type::getFloatTy(context);
         case VALUECHAR:
+            return Type::getInt8Ty(context);
         default:
             return Type::getInt32Ty(context);
     }
@@ -116,11 +115,11 @@ Value *IRError(std::string msg) {
     return nullptr;
 }
 
-static AllocaInst *createEntryBlockAlloca(Function *function, const std::string &name, Type *type) {
+static AllocaInst *createEntryBlockAlloca(Function *function,Value* size,const std::string &name, Type *type) {
     // get a IRbuilder object pointer to the entry of the function
     IRBuilder<> tmp(&function->getEntryBlock(), function->getEntryBlock().begin());
 
-    return tmp.CreateAlloca(type, 0, name.c_str());
+    return tmp.CreateAlloca(type, size, name.c_str());
 }
 
 static Function *getFunction(std::string name) {
@@ -138,6 +137,111 @@ static Function *getFunction(std::string name) {
     return nullptr;
 }
 
+static Value* SysPrint(vector<exprPtr>& params,bool printLine){
+    static Function* llvmPrint = nullptr;
+    if(llvmPrint == nullptr){
+        std::vector<Type*> argTypes = {Type::getInt8PtrTy(context)};
+        FunctionType* funcType = FunctionType::get(Type::getInt32Ty(context), argTypes,true);
+        Function* func = Function::Create(funcType,Function::ExternalLinkage,"printf",thisModule.get());
+        func->setCallingConv(CallingConv::C);
+        llvmPrint = func;
+    }
+    std::string format;
+    std::vector<Value*> printArgs;
+    printArgs.emplace_back(nullptr);    // the first element is to store format
+
+    for(int i=0,e = params.size();i<e;i++){
+        int type = params[i]->getDType();
+        if(type == VALUEINT){
+            format += "%d";
+            printArgs.emplace_back(params[i]->CodeGen());
+        }
+        else if(type == VALUEFLOAT){
+            format += "%lf";
+            printArgs.emplace_back(params[i]->CodeGen());
+        }
+        else if(type == VALUESTRING){
+            format += "%s";
+            printArgs.emplace_back(params[i]->CodeGen());
+        }
+        else{
+            return IRError("unsupported print type");
+        }
+    }
+
+    if(printLine){
+        format += "\n";
+    }
+    printArgs[0] = irBuilder.CreateGlobalStringPtr(format,"print_format");
+    return irBuilder.CreateCall(llvmPrint,printArgs,"call_printf");
+}
+
+static Value* SysRead(vector<exprPtr>& params,bool readLine){
+    static Function* llvmRead = nullptr;
+    if(llvmRead == nullptr){
+        std::vector<Type*> argTypes = {Type::getInt8PtrTy(context)};
+        FunctionType* funcType = FunctionType::get(Type::getInt32Ty(context),argTypes,true);
+        Function* func = Function::Create(funcType,Function::ExternalLinkage,"scanf",thisModule.get());
+
+        func->setCallingConv(CallingConv::C);
+        llvmRead = func;
+    }
+
+    std::string format;
+    std::vector<Value*> readArgs;
+    readArgs.emplace_back(nullptr);
+
+    for(int i=0,e=params.size();i<e;i++){
+        int type = params[i]->getDType();
+        if(params[i]->getExprType() == EXPRID){
+            type = localSymbolTable.findSymbol(static_cast<Identifier*>(params[i].get())->getId())->getDType();
+        }
+
+        if(type == VALUEINT){
+            format += "%d";
+        }
+        else if(type == VALUEFLOAT){
+            format += "%lf";
+        }
+        else if(type == VALUESTRING){
+            format += "%s";
+        }
+        else{
+            return IRError("unsupported read type");
+        }
+
+        readArgs.emplace_back(params[i]->CodeGen());
+    }
+
+    if(readLine){
+        format += "%*[^\n]";
+    }
+
+    readArgs[0] = irBuilder.CreateGlobalStringPtr(format,"read_format");
+    Value* ret = irBuilder.CreateCall(llvmRead,readArgs,"call_read");
+
+    if(readLine){
+        irBuilder.CreateCall(llvmRead,irBuilder.CreateGlobalStringPtr("%*c","read_new_line"),"call_read");
+    }
+    return ret;
+}
+
+bool isIO(std::string name){
+    if(name == "print" || name == "read" || name == "readln" || name == "println"){
+        return true;
+    }
+
+    return false;
+}
+
+Value* getIO(std::string id,std::vector<exprPtr>& params){
+    if(id == "print") return SysPrint(params,false);
+    if(id =="read") return SysRead(params,false);
+    if(id == "println") return SysPrint(params,true);
+    if(id == "readln") return SysPrint(params,true);
+    return nullptr;
+}
+
 void AST::CodeGen() {
     thisModule = std::make_unique<Module>("IRGen", context);
 
@@ -151,7 +255,7 @@ void AST::CodeGen() {
     for(auto &p: globalSymbolTable){
     }
     globalSymbolTable.clear();
-//    //TODO what are these for?
+
     InitializeAllTargetInfos();
     InitializeAllTargets();
     InitializeAllTargetMCs();
@@ -239,16 +343,306 @@ void FuncPart::CodeGen() {
     }
 }
 
-Value *Void::CodeGen(){
+Value *Stmt::CodeGen() {
+    return StmtCodeGen(this);
+}
+
+Value* ForLoop::CodeGen(){
+    Identifier* loopID = static_cast<Identifier*>(getVar());
+    Function* atFunc = irBuilder.GetInsertBlock()->getParent();
+
+    BasicBlock* startBB = BasicBlock::Create(context,"init",atFunc);
+    BasicBlock* loopBodyBB = BasicBlock::Create(context,"loop",atFunc);
+    BasicBlock* condBB = BasicBlock::Create(context,"cond",atFunc);
+    BasicBlock* endBB = BasicBlock::Create(context,"endLoop",atFunc);
+    irBuilder.CreateBr(startBB);
+    irBuilder.SetInsertPoint(startBB);
+
+    // defined first before use
+    //TODO check existence
+//    AllocaInst* alloca = localSymbolTable.findVar(loopID->getId());
+//    // initial value from current scope
+//    Value* startValue = getInitValue()->CodeGen();
+//    if(!startValue)
+//        return nullptr;
+//    irBuilder.CreateStore(startValue,alloca);
+    if(!initAssign->CodeGen())
+        return nullptr;
+
+    Value* cond = condition->CodeGen();
+    if(!cond){
+        return IRError("need condition expression in for loop");
+    }
+
+    localSymbolTable.pushVarTable();
+    localSymbolTable.pushSymbolTable();
+
+    irBuilder.CreateCondBr(cond,endBB,loopBodyBB);
+    irBuilder.SetInsertPoint(loopBodyBB);
+
+    for(int i=0,e = stmtlist.size();i<e;i++)
+        stmtlist[i]->CodeGen();
+
+    irBuilder.CreateBr(condBB);
+    irBuilder.SetInsertPoint(condBB);
+
+    // update value
+//    Value* stepValue = nullptr;
+//    if(getStepValue()){
+//        stepValue = getStepValue()->CodeGen();
+//        if(!stepValue)
+//            return nullptr;
+//    }
+//    else{
+//        stepValue = getStepValue()->CodeGen();
+//    }
+//
+//    AllocaInst* alloca = localSymbolTable.findVar(loopID->getId());
+//    irBuilder.CreateStore(stepValue,alloca);
+    stepAssign->CodeGen();
+    cond = condition->CodeGen();
+    irBuilder.CreateCondBr(cond, endBB,loopBodyBB);
+    irBuilder.SetInsertPoint(endBB);
+
+    localSymbolTable.popSymbolTable();
+    localSymbolTable.popVarTable();
+    return Constant::getNullValue(TypeGen(VALUEFLOAT));
+}
+
+Value* ConditionBlock::CodeGen(){
+    for(int i=0,e=stmtList.size();i<0;i++){
+        stmtList[i]->CodeGen();
+    }
+    if(returnExpr){
+        Value* retVal = returnExpr->CodeGen();
+        irBuilder.CreateRet(retVal);
+        return retVal;
+    }
     return nullptr;
+}
+
+Value* Condition::CodeGen() {
+    Value* cond = expression->CodeGen();
+    if(!cond){
+        return IRError("if without condition");
+    }
+
+    Function *atFunc = irBuilder.GetInsertBlock()->getParent();
+
+    BasicBlock* thenBB = BasicBlock::Create(context,"then",atFunc); //atFunc necessary?
+    BasicBlock* elseBB = BasicBlock::Create(context,"else",atFunc);
+    BasicBlock* mergeBB = BasicBlock::Create(context,"cont",atFunc);
+
+    irBuilder.CreateCondBr(cond,thenBB, elseBB);
+    irBuilder.SetInsertPoint(thenBB);
+
+    localSymbolTable.pushSymbolTable();
+    localSymbolTable.pushVarTable();
+
+    if(block.size()<1){
+        return IRError("no list");
+    }
+
+    block[0]->CodeGen();
+
+    irBuilder.CreateBr(mergeBB);
+    irBuilder.SetInsertPoint(elseBB);
+
+    // else
+    if(block.size()==2){
+        block[1]->CodeGen();
+    }
+
+    irBuilder.CreateBr(mergeBB);
+    irBuilder.SetInsertPoint(mergeBB);
+
+    localSymbolTable.popVarTable();
+    localSymbolTable.popSymbolTable();
+
+    return nullptr;
+}
+
+//TODO 数组元素赋值
+Value *Assignment::CodeGen() {
+    Expr *p = identifier.get();
+
+    string varName;
+    if(identifier->getExprType() == EXPRID)
+        varName = static_cast<Identifier *>(p)->getId();
+    else if(identifier->getExprType() == EXPRARRAY)
+        varName = static_cast<ArrayExpr *>(p)->getId();
+    else;
+
+    Value *init;
+    // a variable or the start address of an array
+    auto varAddr = localSymbolTable.findVar(varName);
+
+    if (!varAddr) {
+        //Global array
+        auto glbAddr = globalValue.find(varName);
+        if (glbAddr == globalValue.end()) {
+            IRError("undefined variable");
+            return nullptr;
+        } else {
+            // assign global
+            GlobalVariable *glb = globalValue[varName];
+            init = expression->CodeGen();
+            if (p->getDType() == VALUEFLOAT && expression->getDType() == VALUEINT)
+                init = irBuilder.CreateUIToFP(init, TypeGen(VALUEFLOAT));
+            glb->setInitializer(static_cast<Constant *>(init));
+
+            return init;
+        }
+    }
+
+    if (expression) {
+        // get value address from expression
+        if (!(init = expression->CodeGen())) {
+            return nullptr;
+        }
+    } else {
+        IRError("assignment not find a expression");
+        return nullptr;
+    }
+
+    if(identifier->getExprType() == EXPRARRAY){
+        //array address
+        Value* alloca = p->CodeGen();  // get element address
+        irBuilder.CreateStore(init,alloca);
+    }
+    else if(identifier->getExprType() == EXPRID){
+        // assign value
+        AllocaInst *alloca = varAddr;
+        irBuilder.CreateStore(init, alloca);
+    }
+    return init;
+}
+
+Value *Decl::CodeGen() {
+    return DeclCodeGen(this);
+}
+
+void ArrayDecl::setArrayType(){
+    ArrayType* arrayType = ArrayType::get(TypeGen(dType),this->size);
+    this->arrayType = arrayType;
+}
+
+Value* ArrayDecl::CodeGen() {
+    Function *atFunc = irBuilder.GetInsertBlock()->getParent();
+
+    // if it is real decl not
+    Value* sizeValue = ConstantInt::get(TypeGen(VALUEINT),size);
+    AllocaInst* arrAlloca = createEntryBlockAlloca(atFunc,sizeValue,name->getId(), TypeGen(dType));
+
+    localSymbolTable.addArray(name->getId(),this);
+    localSymbolTable.addVar(name->getId(),arrAlloca);
+    return sizeValue;
+}
+
+/// used only when generating global variable
+void VariableDecl::GlobalGen() {
+    Value *init;
+    if (globalValue.find(getID()) != globalValue.end()) {
+        IRError("redefined global variable");
+        return;
+    }
+
+    GlobalVariable *glb = new GlobalVariable(*thisModule, TypeGen(getVarType()), 0, GlobalVariable::CommonLinkage,
+                                             nullptr, getID());
+    glb->setAlignment(MaybeAlign(4));
+
+    if (value) {
+        Value *init = value->CodeGen();
+        if (getVarType() == VALUEFLOAT && value->getDType() == VALUEINT)
+            init = irBuilder.CreateUIToFP(init, TypeGen(VALUEFLOAT));
+
+        glb->setInitializer(static_cast<Constant *>(init));
+    }
+
+    globalValue[getID()] = glb;
+    globalSymbolTable[getID()] = name;
+}
+
+Value *VariableDecl::CodeGen() {
+    Function *atFunc = irBuilder.GetInsertBlock()->getParent();
+    std::string &varName = name->getId();
+    Value *init;
+
+    // save id ptr into symbol table
+    if (!localSymbolTable.findSymbol(varName)) {
+        localSymbolTable.addSymbol(varName, name);
+    } else {
+        IRError("redefined symbol");
+        return nullptr;
+    }
+
+    int type = name->getDType();
+
+    if (!value) {
+        switch (type) {
+            case VALUEINT:
+                init = ConstantInt::get(TypeGen(type), 0);
+            case VALUEFLOAT:
+                init = ConstantFP::get(TypeGen(type), 0);
+        }
+    } else {
+        if (!(init = value->CodeGen())) {
+            return nullptr;
+        }
+    }
+
+    AllocaInst *alloca = createEntryBlockAlloca(atFunc, nullptr,varName, init->getType());
+    irBuilder.CreateStore(init, alloca);
+    localSymbolTable.addVar(varName, alloca);
+    return init;
+}
+
+Value *ProtoType::CodeGen() {
+    string &funcName = name->getId();
+
+    if (protoMap.find(funcName) == protoMap.end()) {
+        protoMap[funcName] = std::move(protoPtr(this));
+    }
+    // IRError("redefined function");
+    return nullptr;
+}
+
+Function* ProtoType::FunctionGen() {
+    // generate type
+    std::vector<Type *> argTypes;
+    for (int i = 0, e = getParamSize(); i < e; i++) {
+        argTypes.push_back(TypeGen(getParamType(i)));
+    }
+
+    int returnType = getReturnType();
+
+    // generate function block
+    FunctionType *ft;
+    ft = FunctionType::get(TypeGen(returnType), argTypes, false);
+    Function *func = Function::Create(ft, Function::ExternalLinkage, getFuncName(), thisModule.get());
+
+    int id = 0;
+    for (auto &arg: func->args()) {
+        string &paramName = getParamName(id++);
+        if (paramName == "") {
+            delete &paramName;
+            return nullptr;
+        }
+        arg.setName(paramName);
+    }
+    return func;
 }
 
 Value *Expr::CodeGen() {
     return ExprCodeGen(this);
 }
 
+Value *Void::CodeGen(){
+    return ConstantPointerNull::getNullValue(TypeGen(VALUEINT));
+}
+
 Value *Integer::CodeGen() {
-    return ConstantInt::get(TypeGen(VALUEINT), value, false);
+    return ConstantInt::get(context, APInt(32,value,true));
 }
 
 Value *Float::CodeGen() {
@@ -260,7 +654,50 @@ Value *Bool::CodeGen() {
 }
 
 Value *String::CodeGen() {
-    return nullptr;
+    // constraint length of string in (0,255), include \n
+    if(value.length() > 255){
+        IRError("string is too long");
+        value = value.substr(0,255);
+    }
+    int length = value.length();
+    char end = 0;
+    // align with zero
+    for(int i=0,e=255-length;i<e;i++)
+        value = value+end;
+
+    Value* mem = irBuilder.CreateGlobalString(value);
+    Value* str = irBuilder.CreateLoad(mem);
+    return str; // return a string start position
+}
+
+int ArrayExpr::getDType(){
+    return localSymbolTable.findArray(id->getId())->getElementType();
+}
+
+Value* ArrayExpr::CodeGen() {
+    ArrayDecl* arrayDecl = localSymbolTable.findArray(id->getId());
+    if(!arrayDecl){
+//TODO globalArray
+
+//        GlobalVariable *glb = globalValue[id->getId()];
+//        if(!glb)
+//            return IRError("undefined array");
+//        else{
+//
+//            return irBuilder.CreateLoad(array->getType()->getPointerElementType(),)
+//        }
+        return IRError("undefined array");
+    }
+
+    AllocaInst* startAddr = localSymbolTable.findVar(id->getId());
+    Value* index = this->index->CodeGen();
+    Type* arrayType = arrayDecl->getArrayType();
+
+    Value* access =  irBuilder.CreateGEP(startAddr,index,"access");
+    return access;
+
+    // read value
+    // return irBuilder.CreateLoad(access->getType()->getPointerElementType(),access,id->getId().c_str());
 }
 
 Value *Identifier::CodeGen() {
@@ -271,7 +708,7 @@ Value *Identifier::CodeGen() {
         GlobalVariable *glb = globalValue[identifier];
         if (!glb)
             return IRError("undefined variable");
-        else //TODO global variable with load?
+        else
             return irBuilder.CreateLoad(glb->getType()->getPointerElementType(), glb, identifier.c_str());
     }
 
@@ -306,7 +743,6 @@ int BinaryExpr::getDType() {
             rightPtr = globalSymbolTable[id];
         }
     }
-
 
     int leftType = leftPtr->getDType();
     int rightType = rightPtr->getDType();
@@ -395,6 +831,14 @@ Value *BinaryExpr::CodeGen() {
     Value *L = leftPtr->CodeGen();
     Value *R = rightPtr->CodeGen();
 
+    if(leftPtr->getExprType() == EXPRARRAY) {
+        L = irBuilder.CreateLoad(L->getType()->getPointerElementType(),L,"load element");
+    }
+
+    if (rightPtr->getExprType() == EXPRARRAY) {
+        R = irBuilder.CreateLoad(R->getType()->getPointerElementType(),R,"load element");
+    }
+
     if (!L || !R)
         return nullptr;
 
@@ -451,6 +895,11 @@ Value *BinaryExpr::CodeGen() {
 
 Value *FuncCall::CodeGen() {
     std::string &funcName = func->getId();
+    std::vector<Value *> args;
+
+    if(isIO(funcName)){
+        return getIO(funcName,params);
+    }
 
     Function *callee = getFunction(funcName);
     if (!callee) {
@@ -464,30 +913,17 @@ Value *FuncCall::CodeGen() {
         return IRError(msg);
     }
 
-    std::vector<Value *> args;
     for (int i = 0, e = params.size(); i < e; i++) {
         args.push_back(params[i]->CodeGen());//Type conversion
         if (!args.back()) {
-            return nullptr; //TODO function call failed?
+            return nullptr; //function call failed?
         }
     }
+
+
     std::cout<<"function size:"<<callee->arg_size()<<std::endl;
 
     return irBuilder.CreateCall(callee, args, "calltmp");
-}
-
-Value *Stmt::CodeGen() {
-    return StmtCodeGen(this);
-}
-
-Value *FuncBody::CodeGen() {
-    for (int i = 0, e = stmts.size(); i < e; i++) {
-        stmts[i]->Print();
-        stmts[i]->CodeGen();
-    }
-    if(exprReturn)
-        return exprReturn->CodeGen();
-    return nullptr;
 }
 
 Value *FuncImpl::CodeGen() {
@@ -509,7 +945,7 @@ Value *FuncImpl::CodeGen() {
 
     int id = 0;
     for (auto &arg: implFunc->args()) {
-        AllocaInst *alloca = createEntryBlockAlloca(implFunc, arg.getName().str(), arg.getType());
+        AllocaInst *alloca = createEntryBlockAlloca(implFunc, nullptr,arg.getName().str(), arg.getType());
 
         irBuilder.CreateStore(&arg, alloca);
 
@@ -534,146 +970,12 @@ Value *FuncImpl::CodeGen() {
     return nullptr;
 }
 
-Value *Decl::CodeGen() {
-    return DeclCodeGen(this);
-}
-
-/// used only when generating global variable
-void VariableDecl::GlobalGen() {
-    Value *init;
-    if (globalValue.find(getID()) != globalValue.end()) {
-        IRError("redefined global variable");
-        return;
+Value *FuncBody::CodeGen() {
+    for (int i = 0, e = stmts.size(); i < e; i++) {
+        stmts[i]->Print();
+        stmts[i]->CodeGen();
     }
-
-    GlobalVariable *glb = new GlobalVariable(*thisModule, TypeGen(getVarType()), 0, GlobalVariable::CommonLinkage,
-                                             nullptr, getID());
-    glb->setAlignment(MaybeAlign(4));
-
-    if (value) {
-        Value *init = value->CodeGen();
-        if (getVarType() == VALUEFLOAT && value->getDType() == VALUEINT)
-            init = irBuilder.CreateUIToFP(init, TypeGen(VALUEFLOAT));
-
-        glb->setInitializer(static_cast<Constant *>(init));
-    }
-
-    globalValue[getID()] = glb;
-    globalSymbolTable[getID()] = name;
-}
-
-Value *VariableDecl::CodeGen() {
-    Function *atFunc = irBuilder.GetInsertBlock()->getParent();
-    std::string &varName = name->getId();
-    Value *init;
-
-    // save id ptr into symbol table
-    if (!localSymbolTable.findSymbol(varName)) {
-        localSymbolTable.addSymbol(varName, name);
-    } else {
-        IRError("redefined symbol");
-        return nullptr;
-    }
-
-    int type = name->getDType();
-
-    if (!value) {
-        switch (type) {
-            case VALUEINT:
-                init = ConstantInt::get(TypeGen(type), 0);
-            case VALUEFLOAT:
-                init = ConstantFP::get(TypeGen(type), 0);
-        }
-    } else {//TODO type conversion
-        if (!(init = value->CodeGen())) {
-            return nullptr;
-        }
-    }
-
-    AllocaInst *alloca = createEntryBlockAlloca(atFunc, varName, init->getType());
-    irBuilder.CreateStore(init, alloca);
-    localSymbolTable.addVar(varName, alloca);
-    return init;
-}
-
-Value *ProtoType::CodeGen() {
-    string &funcName = name->getId();
-
-    if (protoMap.find(funcName) == protoMap.end()) {
-        protoMap[funcName] = std::move(protoPtr(this));
-    }
-    // IRError("redefined function");
-    return nullptr;
-}
-
-Function* ProtoType::FunctionGen() {
-    // generate type
-    std::vector<Type *> argTypes;
-    for (int i = 0, e = getParamSize(); i < e; i++) {
-        argTypes.push_back(TypeGen(getParamType(i)));
-    }
-
-    int returnType = getReturnType();
-
-    // generate function block
-    FunctionType *ft;
-    ft = FunctionType::get(TypeGen(returnType), argTypes, false);
-    Function *func = Function::Create(ft, Function::ExternalLinkage, getFuncName(), thisModule.get());
-
-    int id = 0;
-    for (auto &arg: func->args()) {
-        string &paramName = getParamName(id++);
-        if (paramName == "") {
-            delete &paramName;
-            return nullptr;
-        }
-        arg.setName(paramName);
-    }
-    return func;
-}
-
-Value *ArrayDecl::CodeGen() {
-
-    return nullptr;
-}
-
-// assign value for declared variable
-Value *Assignment::CodeGen() {
-    Expr *p = identifier.get();
-    string &varName = static_cast<Identifier *>(p)->getId();
-
-    Value *init;
-    auto varAddr = localSymbolTable.findVar(varName);
-    auto glbAddr = globalValue.find(varName);
-    if (!varAddr) {
-        if (glbAddr == globalValue.end()) {
-            IRError("undefined variable");
-            return nullptr;
-        } else {
-            // assign global
-            GlobalVariable *glb = globalValue[varName];
-            init = expression->CodeGen();
-            if (p->getDType() == VALUEFLOAT && expression->getDType() == VALUEINT)
-                init = irBuilder.CreateUIToFP(init, TypeGen(VALUEFLOAT));
-            glb->setInitializer(static_cast<Constant *>(init));
-
-            return init;
-        }
-    }
-
-    if (expression) {
-        // get value address from expression
-        if (!(init = expression->CodeGen())) {
-            return nullptr;
-        }
-    } else {
-        IRError("assignment not find a expression");
-        return nullptr;
-    }
-
-    // assign value
-    AllocaInst *alloca = varAddr;
-    irBuilder.CreateStore(init, alloca);
-
-    return init;
+    if(exprReturn)
+        return exprReturn->CodeGen();
+    return ConstantPointerNull::getNullValue(TypeGen(VALUEINT));
 }

@@ -54,47 +54,50 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    SEMICOLON = 258,               /* SEMICOLON  */
-    COMMA = 259,                   /* COMMA  */
-    LEFTP = 260,                   /* LEFTP  */
-    RIGHTP = 261,                  /* RIGHTP  */
-    LEFTB = 262,                   /* LEFTB  */
-    RIGHTB = 263,                  /* RIGHTB  */
-    LEFTSB = 264,                  /* LEFTSB  */
-    RIGHTSB = 265,                 /* RIGHTSB  */
-    MAIN = 266,                    /* MAIN  */
-    RETURN = 267,                  /* RETURN  */
-    FOR = 268,                     /* FOR  */
-    WHILE = 269,                   /* WHILE  */
-    IF = 270,                      /* IF  */
-    ELSE = 271,                    /* ELSE  */
-    BREAK = 272,                   /* BREAK  */
-    IDENTIFIER = 273,              /* IDENTIFIER  */
-    STRING_VALUE = 274,            /* STRING_VALUE  */
-    INT = 275,                     /* INT  */
-    FLOAT = 276,                   /* FLOAT  */
-    BOOL = 277,                    /* BOOL  */
-    VOID = 278,                    /* VOID  */
-    STRING = 279,                  /* STRING  */
-    INTEGER_VALUE = 280,           /* INTEGER_VALUE  */
-    FLOAT_VALUE = 281,             /* FLOAT_VALUE  */
-    BOOL_VALUE = 282,              /* BOOL_VALUE  */
-    FALSE = 283,                   /* FALSE  */
-    TRUE = 284,                    /* TRUE  */
-    ASSIGN = 285,                  /* ASSIGN  */
-    GT = 286,                      /* GT  */
-    LT = 287,                      /* LT  */
-    EQ = 288,                      /* EQ  */
-    NEQ = 289,                     /* NEQ  */
-    EGT = 290,                     /* EGT  */
-    ELT = 291,                     /* ELT  */
-    AND = 292,                     /* AND  */
-    OR = 293,                      /* OR  */
-    ADD = 294,                     /* ADD  */
-    SUB = 295,                     /* SUB  */
-    MUL = 296,                     /* MUL  */
-    DIV = 297,                     /* DIV  */
-    POW = 298                      /* POW  */
+    COLON = 258,                   /* COLON  */
+    SEMICOLON = 259,               /* SEMICOLON  */
+    COMMA = 260,                   /* COMMA  */
+    LEFTP = 261,                   /* LEFTP  */
+    RIGHTP = 262,                  /* RIGHTP  */
+    LEFTB = 263,                   /* LEFTB  */
+    RIGHTB = 264,                  /* RIGHTB  */
+    LEFTSB = 265,                  /* LEFTSB  */
+    RIGHTSB = 266,                 /* RIGHTSB  */
+    MAIN = 267,                    /* MAIN  */
+    RETURN = 268,                  /* RETURN  */
+    FOR = 269,                     /* FOR  */
+    IN = 270,                      /* IN  */
+    TO = 271,                      /* TO  */
+    WHILE = 272,                   /* WHILE  */
+    IF = 273,                      /* IF  */
+    ELSE = 274,                    /* ELSE  */
+    BREAK = 275,                   /* BREAK  */
+    IDENTIFIER = 276,              /* IDENTIFIER  */
+    STRING_VALUE = 277,            /* STRING_VALUE  */
+    INT = 278,                     /* INT  */
+    FLOAT = 279,                   /* FLOAT  */
+    BOOL = 280,                    /* BOOL  */
+    VOID = 281,                    /* VOID  */
+    STRING = 282,                  /* STRING  */
+    INTEGER_VALUE = 283,           /* INTEGER_VALUE  */
+    FLOAT_VALUE = 284,             /* FLOAT_VALUE  */
+    BOOL_VALUE = 285,              /* BOOL_VALUE  */
+    FALSE = 286,                   /* FALSE  */
+    TRUE = 287,                    /* TRUE  */
+    ASSIGN = 288,                  /* ASSIGN  */
+    GT = 289,                      /* GT  */
+    LT = 290,                      /* LT  */
+    EQ = 291,                      /* EQ  */
+    NEQ = 292,                     /* NEQ  */
+    EGT = 293,                     /* EGT  */
+    ELT = 294,                     /* ELT  */
+    AND = 295,                     /* AND  */
+    OR = 296,                      /* OR  */
+    ADD = 297,                     /* ADD  */
+    SUB = 298,                     /* SUB  */
+    MUL = 299,                     /* MUL  */
+    DIV = 300,                     /* DIV  */
+    POW = 301                      /* POW  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -124,7 +127,7 @@ union YYSTYPE
 	char* valueStr;
     string* Str;
 
-#line 128 "../include/parser.hpp"
+#line 131 "../include/parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

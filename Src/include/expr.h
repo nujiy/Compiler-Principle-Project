@@ -50,6 +50,7 @@ class Void : public ValueExpr {
 public:
     Void() {
         this->setValueType(VALUEVOID);
+        cout<<"create void"<<endl;
     }
 
     void Print() {}
@@ -200,7 +201,14 @@ public:
     ArrayExpr(Expr* id,Expr* index){
         this->id = idPtr(static_cast<Identifier*>(id));
         this->index = exprPtr(index);
+        this->setExprType(EXPRARRAY);
     }
+
+    string& getId(){
+        return id->getId();
+    }
+
+    int getDType();
 
     void Print() {
         id->Print();
@@ -208,5 +216,7 @@ public:
         index->Print();
         cout << "]";
     }
+
+    llvm::Value* CodeGen();
 };
 #endif //COMPILER_EXPR_H

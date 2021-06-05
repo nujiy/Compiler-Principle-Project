@@ -36,11 +36,25 @@ class VariableDecl : public Decl {
     exprPtr value;
     string id;
 public:
-    VariableDecl(int dType, Expr *name) : value(nullptr) {
+    VariableDecl(int dType, Expr *name) {
         this->name = static_cast<Identifier*>(name);
         this->name->setDType(dType);
         this->setDeclType(DECLVARIABLE);
         this->id = this->name->getId();
+
+        switch (dType) {
+            case VALUEINT:
+                this->value = exprPtr(new Integer(0));
+                break;
+            case VALUEFLOAT:
+                this->value = exprPtr(new Float(0));
+                break;
+            case VALUEBOOL:
+                this->value = exprPtr (new Bool(false));
+                break;
+            default:
+                this->value =exprPtr (new Integer(0));
+        }
     }
 
     VariableDecl(int dType, Expr *name, Expr *value) {
@@ -112,25 +126,41 @@ class ArrayDecl : public Decl {
     idPtr name;
     int size;
     int dType;
+    llvm::ArrayType* arrayType;
+    vector<ValueExpr> data;
 public:
-    ArrayDecl(int dType, Expr *arrayName, int size) : dType(dType), size(size) {
+    ArrayDecl(int dType, Expr *arrayName, int size) : size(size) {
         Identifier *p = static_cast<Identifier *>(arrayName);
         this->name = idPtr(p);
-        this->name->setDType(VALUEARRAY);
+        this->name->setDType(dType);
+        this->dType = dType;
         this->setDeclType(DECLARRAY);
+        this->setArrayType();
     }
 
-    ArrayDecl(int dType,Expr* arrayName):dType(dType){
+    ArrayDecl(int dType,Expr* arrayName){
         this->name = idPtr(static_cast<Identifier*>(arrayName));
         this->name->setDType(VALUEARRAY);
         this->setDeclType(DECLARRAY);
         this->size = -1;
+        this->dType = dType;
+        this->setArrayType();
     }
 
     void Print() {
         cout << getTypeMap(this->dType) << " " << endl;
         this->name->Print();
         cout << "[" << size << "]" << endl;
+    }
+
+    void setArrayType();
+
+    int getElementType(){
+        return this->dType;
+    }
+
+    llvm::ArrayType* getArrayType(){
+        return arrayType;
     }
 
     string &getID() {

@@ -35,8 +35,8 @@ int yyerror(const char* s);
     string* Str;
 }
 
-%token SEMICOLON COMMA LEFTP RIGHTP LEFTB RIGHTB LEFTSB RIGHTSB
-%token MAIN RETURN FOR WHILE IF ELSE BREAK
+%token COLON SEMICOLON COMMA LEFTP RIGHTP LEFTB RIGHTB LEFTSB RIGHTSB
+%token MAIN RETURN FOR IN TO WHILE IF ELSE BREAK
 %token <Str> IDENTIFIER STRING_VALUE
 %token <valueStr> INT FLOAT BOOL VOID STRING
 %token <valueStr> INTEGER_VALUE FLOAT_VALUE BOOL_VALUE FALSE TRUE
@@ -52,10 +52,10 @@ int yyerror(const char* s);
 %type <dataType> type
 %type <intval> size
 %type <intval> logic_op relation_op
-%type <expr> id left_id value func_call
-%type <expr> expression relation_expr logic_term logic_expr expr_return arith_expr term factor
+%type <expr> id left_id value func_call expr_return
+%type <expr> expression relation_expr logic_term logic_expr arith_expr term factor
 %type <exprList> variables parameterExprs
-%type <stmt> stmt assignment loop condition for_loop while_loop
+%type <stmt> stmt assignment loop condition for_loop while_loop else_block
 %type <stmtList> stmt_list
 %type <funcbody> function_body
 %type <funcImpl> function_impl
@@ -161,17 +161,21 @@ variables: variables expression COMMA {$1->addExpr($2); $$ = $1;}
 loop : for_loop {$$ = $1;}
 	 | while_loop {$$ = $1;}
 
-for_loop : FOR LEFTP assignment SEMICOLON relation_expr SEMICOLON assignment RIGHTP LEFTB stmt_list RIGHTB {
-	$$ = new ForLoop($3,$5,$7,$10);
+for_loop : FOR LEFTP assignment SEMICOLON relation_expr SEMICOLON assignment RIGHTP LEFTB stmt_list expr_return RIGHTB {
+	$$ = new ForLoop($3,$5,$7,$10,$11);
 }
 
 while_loop : WHILE LEFTP expression RIGHTP LEFTB stmt_list RIGHTB {
 	$$ = new WhileLoop($3,$6);
 }
 
-condition : IF LEFTP relation_expr RIGHTP LEFTB stmt_list RIGHTB{$$ =new Condition($3,$6);}
-	| IF LEFTP relation_expr RIGHTP LEFTB stmt_list RIGHTB ELSE LEFTB stmt_list RIGHTB {$$ = new ConditionOtherwise($3,$6,$10);}
+condition : IF LEFTP relation_expr RIGHTP LEFTB stmt_list expr_return RIGHTB else_block {
+ConditionBlock* ifBlock = new ConditionBlock($6,$7);
+$$ =new Condition($3,ifBlock,$9);
+}
 
+else_block : ELSE LEFTB stmt_list expr_return RIGHTB {$$ = new ConditionBlock($3,$4);}
+            | {$$ = nullptr;}
 
 expression: arith_expr {$$ = $1;}
             | relation_expr {$$ = $1;}
@@ -180,8 +184,8 @@ expression: arith_expr {$$ = $1;}
 
 expr_return: RETURN expression SEMICOLON {$$ = $2;}
 		| RETURN SEMICOLON {$$ = new Void();}
-		| SEMICOLON {$$ = new Void();}
-		| {$$ = new Void();}
+		| SEMICOLON {$$ = nullptr;}
+		| {$$ = nullptr;}
 		;
 
 relation_expr: arith_expr relation_op arith_expr {$$ = new BinaryExpr($1,$3,$2);}
@@ -190,7 +194,8 @@ relation_op: LT {$$ = OPLT;}
             | GT {$$ = OPGT;}
             | ELT {$$ = OPELT;}
             | EGT {$$ = OPEGT;}
-            | NEQ {$$ = NEQ;}
+            | NEQ {$$ = OPNEQ;}
+            | EQ {$$ = OPEQ;}
 
 logic_expr: logic_expr logic_op logic_term{$$ = new BinaryExpr($1,$3,$2);}
             | logic_term {$$ = $1;}

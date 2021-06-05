@@ -16,6 +16,7 @@ class Decl;
 class Assignment;
 class WhileLoop;
 class ForLoop;
+class ConditionBlock;
 class Condition;
 class ConditionOtherwise;
 class StmtList;
@@ -32,6 +33,7 @@ typedef unique_ptr<StmtList> stmtListPtr;
 typedef unique_ptr<Expr> exprPtr;
 typedef unique_ptr<Decl> declPtr;
 typedef unique_ptr<Assignment> assignPtr;
+typedef unique_ptr<ConditionBlock> condBlockPtr;
 typedef unique_ptr<ForLoop> forLoopPtr;
 typedef unique_ptr<WhileLoop> whileLoopPtr;
 typedef unique_ptr<Condition> conditionPtr;
@@ -84,6 +86,7 @@ public:
 
     void addStmt(Stmt *stmt) {
         this->stmtList.push_back(stmt);
+        cout<<"add stmt"<<endl;
     }
 };
 
@@ -164,6 +167,14 @@ public:
         cout << endl;
     }
 
+    Expr* getLeftID(){
+        return identifier.get();
+    }
+
+    Expr* getRightValue(){
+        return expression.get();
+    };
+
     llvm::Value *CodeGen();
 };
 
@@ -191,96 +202,101 @@ public:
     }
 };
 
-// for循环
+// for循环 要求只有一个变量
 class ForLoop:public Stmt{
-    exprPtr expression;
-    assignPtr assignment_1, assignment_2;
+    assignPtr initAssign;
+    exprPtr condition;
+    assignPtr stepAssign;
     vector<stmtPtr> stmtlist;
+    exprPtr returnExpr;
 public:
-    ForLoop(Stmt* assignment_1, Expr* expression, Stmt* assignment_2,StmtList* stmtlist): expression(expression)
+    ForLoop(Stmt* initAssign, Expr* condition, Stmt* stepAssign,StmtList* stmtlist,Expr* returnExpr)
     {
         for(int i=0,e=stmtlist->stmtList.size();i<e;i++){
             this->stmtlist.push_back(stmtPtr(stmtlist->stmtList[i]));
         }
-        this->assignment_1 = assignPtr(static_cast<Assignment*>(assignment_1));
-        this->assignment_2 = assignPtr(static_cast<Assignment*>(assignment_2));
+        this->condition = exprPtr(condition);
+        this->initAssign = assignPtr(static_cast<Assignment*>(initAssign));
+        this->stepAssign = assignPtr(static_cast<Assignment*>(stepAssign));
+        this->returnExpr = exprPtr(returnExpr);
         this->setStmtType(STMTFOR);
         cout << "a for loop created" << endl;
     }
 
     void Print(){
         cout << "for (";
-        assignment_1->Print();
+        initAssign->Print();
         cout << ";";
-        expression->Print();
+        condition->Print();
         cout << ";";
-        assignment_2->Print();
-        cout << ")" << endl
-             << "{" << endl;
+        stepAssign->Print();
+        cout << "){" << endl;
         for(int i=0,e=stmtlist.size(); i<e;i++){
             stmtlist[i]->Print();
         }
         cout << "}" << endl;
     }
+
+    Expr* getVar(){
+        return initAssign->getLeftID();
+    }
+
+    Expr* getInitValue(){
+        return initAssign->getRightValue();
+    }
+
+    Expr* getStepValue(){
+        return stepAssign->getRightValue();
+    }
+
+    llvm::Value* CodeGen();
 };
 
-// if条件分支
+class ConditionBlock:public Stmt {
+public:
+    vector<stmtPtr> stmtList;
+    exprPtr returnExpr;
+    ConditionBlock(StmtList* stmtList,Expr* returnExpr){
+        for(int i=0,e=stmtList->stmtList.size();i<e;i++){
+            this->stmtList.push_back(stmtPtr(stmtList->stmtList[i]));
+        }
+        this->returnExpr = exprPtr(returnExpr);
+    }
+
+    void Print(){
+        for(int i=0,e=stmtList.size(); i<e;i++){
+            stmtList[i]->Print();
+        }
+
+        returnExpr->Print();
+    }
+
+    llvm::Value* CodeGen();
+};
+
 class Condition :public Stmt
 {
     exprPtr expression;
-    vector<stmtPtr> stmtlist;
+    vector<condBlockPtr> block;
 public:
-    Condition(Expr* expression, StmtList * stmtlist):expression(expression){
-        for(int i=0,e=stmtlist->stmtList.size();i<e;i++){
-            this->stmtlist.push_back(stmtPtr(stmtlist->stmtList[i]));
-        }
+    Condition(Expr* expression, Stmt* ifBlock,Stmt* elseBlock):expression(expression){
+        this->block.push_back(condBlockPtr (static_cast<ConditionBlock*>(ifBlock)));
+        if(elseBlock)
+            this->block.push_back(condBlockPtr (static_cast<ConditionBlock*>(elseBlock)));
         this->setStmtType(STMTCONDITION);
         cout << "a condition created" << endl;
     }
     void Print(){
         cout << "if (";
         expression->Print();
-        cout << ")" << endl
-             << "{";
-        for(int i=0,e=stmtlist.size(); i<e;i++){
-            stmtlist[i]->Print();
+        cout << ")" << endl;
+        for(int i=0,e=block.size(); i<e;i++){
+            cout<< "{";
+            block[i]->Print();
+            cout << "}" << endl;
         }
-        cout << "}" << endl;
     }
-};
 
-// if-else
-class ConditionOtherwise : public Stmt
-{
-    exprPtr expression;
-    vector<stmtPtr> stmtlist_1, stmtlist_2;
-public:
-    ConditionOtherwise(Expr * expression,StmtList * stmtlist_1,StmtList * stmtlist_2):expression(expression) {
-        for(int i=0,e=stmtlist_1->stmtList.size();i<e;i++){
-            this->stmtlist_1.push_back(stmtPtr(stmtlist_1->stmtList[i]));
-        }
-        for(int i=0,e=stmtlist_2->stmtList.size();i<e;i++){
-            this->stmtlist_2.push_back(stmtPtr(stmtlist_2->stmtList[i]));
-        }
-
-        this->setStmtType(STMTCONDITION_WITH_OTHERWISE);
-        cout << "a condition with otherwise created" << endl;
-    }
-    void Print(){
-        cout << "if (";
-        expression->Print();
-        cout << ")" << endl
-             << "{";
-        for(int i=0,e=stmtlist_1.size(); i<e;i++){
-            stmtlist_1[i]->Print();
-        }
-        cout << "}" << endl
-             << "else"
-             << "{" << endl;
-        for(int i=0,e=stmtlist_2.size(); i<e;i++){
-            stmtlist_2[i]->Print();
-        }
-        cout << "}" << endl;
-    }
+    llvm::Value* CodeGen();
 };
 #endif //COMPILER_STMT_H
