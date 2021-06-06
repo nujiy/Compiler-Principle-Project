@@ -11,8 +11,15 @@ extern int yyparse(yyFlexLexer *yyflex);
 
 extern AST *program;
 
-int main() {
-    ifstream *fileIn = new ifstream("./testfile", ios::in);
+int main(int args,char** argv) {
+
+    if(args != 2){
+        cout<<"invalid input arguments"<<endl;
+        return -1;
+    }
+    string filename = string(argv[1]);
+
+    ifstream *fileIn = new ifstream(filename, ios::in);
     if (!fileIn->is_open()) {
         cout << "failed in open file" << endl;
         return -1;

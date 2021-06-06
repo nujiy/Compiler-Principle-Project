@@ -268,7 +268,8 @@ public:
             stmtList[i]->Print();
         }
 
-        returnExpr->Print();
+        if(returnExpr)
+            returnExpr->Print();
     }
 
     llvm::Value* CodeGen();

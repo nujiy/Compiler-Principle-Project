@@ -152,6 +152,11 @@ static Value* SysPrint(vector<exprPtr>& params,bool printLine){
 
     for(int i=0,e = params.size();i<e;i++){
         int type = params[i]->getDType();
+
+        if(params[i]->getExprType() == EXPRID){
+            type = localSymbolTable.findSymbol(static_cast<Identifier*>(params[i].get())->getId())->getDType();
+        }
+
         if(type == VALUEINT){
             format += "%d";
             printArgs.emplace_back(params[i]->CodeGen());
@@ -238,7 +243,7 @@ Value* getIO(std::string id,std::vector<exprPtr>& params){
     if(id == "print") return SysPrint(params,false);
     if(id =="read") return SysRead(params,false);
     if(id == "println") return SysPrint(params,true);
-    if(id == "readln") return SysPrint(params,true);
+    if(id == "readln") return SysRead(params,true);
     return nullptr;
 }
 
@@ -248,13 +253,6 @@ void AST::CodeGen() {
     Global->CodeGen();
     Main->CodeGen();
     Function->CodeGen();
-
-    raw_os_ostream irout(std::cout);
-    thisModule->print(irout, new AssemblyAnnotationWriter());
-    globalValue.clear();
-    for(auto &p: globalSymbolTable){
-    }
-    globalSymbolTable.clear();
 
     InitializeAllTargetInfos();
     InitializeAllTargets();
@@ -281,8 +279,26 @@ void AST::CodeGen() {
     auto targetMachine = target->createTargetMachine(targetTriple, cpu, feature, opt, rm);
 
     thisModule->setDataLayout(targetMachine->createDataLayout());
+    thisModule->setTargetTriple(targetTriple);
 
-    auto filename = "output";
+    raw_os_ostream irout(std::cout);
+    int fd = open("test.ll",O_CREAT | O_WRONLY,0644);
+
+    if(fd <0){
+        std::cerr<<"can't open file test.ll: "<<errno<<std::endl;
+    }
+
+    if(_dup2(fd,1)<0){
+        std::cerr<<"can't dup file test.ll to stdout: "<<errno<<std::endl;
+    }
+    close(fd);
+
+    thisModule->print(outs(), nullptr);
+    globalValue.clear();
+    globalSymbolTable.clear();
+
+
+    auto filename = "test.exe";
     std::error_code ec;
     raw_fd_ostream dst(filename, ec, sys::fs::OF_None);
 
@@ -302,7 +318,7 @@ void AST::CodeGen() {
     pass.run(*(thisModule.get()));
     dst.flush();
 
-    outs() << "wrote " << filename << "\n";
+//    std::cout << "wrote " << filename << "\n";
     return;
 }
 
@@ -323,17 +339,17 @@ void GlobalPart::CodeGen() {
 
 void MainPart::CodeGen() {
     // get main function block
-    FunctionType *funcType = FunctionType::get(Type::getInt16Ty(context), false);
+    FunctionType *funcType = FunctionType::get(TypeGen(VALUEINT), false);
     Function *_main_ = Function::Create(funcType, Function::ExternalLinkage, "main", thisModule.get());
     BasicBlock *entry = BasicBlock::Create(context, "entry", _main_);
     irBuilder.SetInsertPoint(entry);
     localSymbolTable.pushSymbolTable();
     localSymbolTable.pushVarTable();
 
-        irBuilder.CreateRet(mainFunc->CodeGen());
-        verifyFunction(*_main_);
-        localSymbolTable.popSymbolTable();
-        localSymbolTable.popVarTable();
+    irBuilder.CreateRet(mainFunc->CodeGen());
+    verifyFunction(*_main_);
+    localSymbolTable.popSymbolTable();
+    localSymbolTable.popVarTable();
 }
 
 void FuncPart::CodeGen() {
@@ -410,7 +426,10 @@ Value* ForLoop::CodeGen(){
 }
 
 Value* ConditionBlock::CodeGen(){
-    for(int i=0,e=stmtList.size();i<0;i++){
+    localSymbolTable.pushSymbolTable();
+    localSymbolTable.pushVarTable();
+
+    for(int i=0,e=stmtList.size();i<e;i++){
         stmtList[i]->CodeGen();
     }
     if(returnExpr){
@@ -418,6 +437,8 @@ Value* ConditionBlock::CodeGen(){
         irBuilder.CreateRet(retVal);
         return retVal;
     }
+    localSymbolTable.popVarTable();
+    localSymbolTable.popSymbolTable();
     return nullptr;
 }
 
@@ -436,9 +457,6 @@ Value* Condition::CodeGen() {
     irBuilder.CreateCondBr(cond,thenBB, elseBB);
     irBuilder.SetInsertPoint(thenBB);
 
-    localSymbolTable.pushSymbolTable();
-    localSymbolTable.pushVarTable();
-
     if(block.size()<1){
         return IRError("no list");
     }
@@ -456,13 +474,9 @@ Value* Condition::CodeGen() {
     irBuilder.CreateBr(mergeBB);
     irBuilder.SetInsertPoint(mergeBB);
 
-    localSymbolTable.popVarTable();
-    localSymbolTable.popSymbolTable();
-
     return nullptr;
 }
 
-//TODO 数组元素赋值
 Value *Assignment::CodeGen() {
     Expr *p = identifier.get();
 
@@ -569,7 +583,7 @@ Value *VariableDecl::CodeGen() {
     Value *init;
 
     // save id ptr into symbol table
-    if (!localSymbolTable.findSymbol(varName)) {
+    if (!localSymbolTable.judgeSymbolRedefine(varName)) {
         localSymbolTable.addSymbol(varName, name);
     } else {
         IRError("redefined symbol");

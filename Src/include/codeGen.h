@@ -28,6 +28,10 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <fstream>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "AST.h"
 #include "stmt.h"
 #include "expr.h"
@@ -58,7 +62,7 @@ bool CheckLogic(int, int);
 class SymbolTable {
     std::vector<std::map<std::string,AllocaInst*>*> namedValue;   // address map
     std::vector<std::map<string,Identifier*>*> tables;  // id map
-    std::vector<std::map<string,ArrayDecl*>*> arrays;
+    std::vector<std::map<string,ArrayDecl*>*> namedArray;
 public:
     SymbolTable(){}
 
@@ -80,6 +84,28 @@ public:
         return nullptr; //can't find
     }
 
+    bool judgeSymbolRedefine(string name){
+        if(namedValue.size()<=0){
+            return false;
+        }
+
+        if(namedValue.back()->find(name) == namedValue.back()->end())
+            return false;
+
+        return true;
+    }
+
+    bool judgeArrayRedefine(string name){
+        if(namedArray.size()<=0){
+            return false;
+        }
+
+        if(namedArray.back()->find(name) != namedArray.back()->end())
+            return false;
+
+        return true;
+    }
+
     Identifier* findSymbol(string name){
         for(int i=tables.size()-1;i>=0;i--){
             if(tables[i]->find(name) != tables[i]->end())
@@ -89,9 +115,9 @@ public:
     }
 
     ArrayDecl* findArray(string name){
-        for(int i= arrays.size()-1;i>=0;i--){
-            if(arrays[i]->find(name) != arrays[i]->end())
-                return (*arrays[i])[name];
+        for(int i= namedArray.size()-1;i>=0;i--){
+            if(namedArray[i]->find(name) != namedArray[i]->end())
+                return (*namedArray[i])[name];
         }
         return nullptr;
     }
@@ -111,10 +137,10 @@ public:
     }
 
     void addArray(string name,ArrayDecl* array){
-        if(arrays.size()<=0)
+        if(namedArray.size()<=0)
             pushArrayTable();
 
-        (*arrays.back())[name] = array;
+        (*namedArray.back())[name] = array;
     }
 
     void pushVarTable(){
@@ -126,7 +152,7 @@ public:
     }
 
     void pushArrayTable(){
-        arrays.push_back(new std::map<string,ArrayDecl*>());
+        namedArray.push_back(new std::map<string,ArrayDecl*>());
     }
 
     void popVarTable(){
@@ -141,8 +167,8 @@ public:
     }
 
     void popArrayTable(){
-        if(arrays.size()>0)
-            arrays.pop_back();
+        if(namedArray.size()>0)
+            namedArray.pop_back();
     }
 };
 

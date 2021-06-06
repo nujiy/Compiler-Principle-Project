@@ -2,7 +2,6 @@ main ()
 {
     int M = 2;
     int N = 1;
-    readln(M);
-    print(M);
+    print(M,N);
     return;
 }
