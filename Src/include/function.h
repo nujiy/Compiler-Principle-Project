@@ -31,7 +31,8 @@ public:
             stmts[i]->Print();
         }
         cout << "return ";
-        exprReturn->Print();
+        if(exprReturn)
+            exprReturn->Print();
         cout << endl << "}" << endl;
     }
 

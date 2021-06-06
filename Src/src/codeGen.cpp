@@ -653,6 +653,7 @@ Value *Expr::CodeGen() {
 
 Value *Void::CodeGen(){
     return ConstantPointerNull::getNullValue(TypeGen(VALUEINT));
+//    return UndefValue::get(TypeGen(VALUEVOID));
 }
 
 Value *Integer::CodeGen() {
@@ -814,25 +815,6 @@ Value *BinaryExpr::CodeGen() {
             rightPtr = globalSymbolTable[id];
         }
     }
-//
-//    if (op == OPGT || op == OPLT || op == OPEQ || op == OPEGT || op == OPELT || op == OPNEQ) {
-//        if (!CheckCmp(leftPtr->getDType(), rightPtr->getDType())) {
-//            IRError("Can't make comparison because of unmatched type");
-//            return nullptr;
-//        }
-//        this->setDType(VALUEBOOL);
-//    } else if (op == OPOR || op == OPAND) {
-//        if (!CheckLogic(leftPtr->getDType(), rightPtr->getDType())) {
-//            IRError("Can't make logic calculation because of unmatched type");
-//            return nullptr;
-//        }
-//        this->setDType(VALUEBOOL);
-//    } else {
-//        if (!CheckArith(leftPtr->getDType(), rightPtr->getDType(), &retType)) {
-//            return nullptr;
-//        }
-//        this->setDType(retType);
-//    }
 
     int retType = this->getDType();
 
@@ -934,10 +916,12 @@ Value *FuncCall::CodeGen() {
         }
     }
 
-
     std::cout<<"function size:"<<callee->arg_size()<<std::endl;
 
-    return irBuilder.CreateCall(callee, args, "calltmp");
+    if(callee->getType()->isVoidTy())
+        return irBuilder.CreateCall(callee,args);
+
+    return irBuilder.CreateCall(callee, args);
 }
 
 Value *FuncImpl::CodeGen() {
@@ -973,7 +957,7 @@ Value *FuncImpl::CodeGen() {
         localSymbolTable.popSymbolTable();
         localSymbolTable.popVarTable();
 
-        return implFunc;
+        return retVal;
     }
 
     localSymbolTable.popSymbolTable();
