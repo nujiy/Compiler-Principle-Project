@@ -1,4 +1,5 @@
 int N = 10001;
+int arr[N];
 int partition(int arr[], int low, int high);
 void quickSort(int arr[], int start, int end);
 
@@ -7,8 +8,7 @@ main()
     int i;
     int j;
     int n;
-    int arr[N];
-    read(n);
+    read("%d",n);
     if(n == 0)
     {
         println();
@@ -16,12 +16,12 @@ main()
     }
     for (i = 0; i < n; i = i+1)
     {
-        readln(arr[i]);
+        read("%d",arr[i]);
     }
-    quickSort(arr, 0, n - 1);
+    quickSort(arr[], 0, n - 1);
     for(i=0 ; i<n; i = i+1)
     {
-        println(arr[i]);
+        println("%d",arr[i]);
     }
     return;
 }

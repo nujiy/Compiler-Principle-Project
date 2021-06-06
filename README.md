@@ -2,18 +2,21 @@
 
 ZJU compiler principle project
 
-## 运行说明
+## 运行调试说明
 
 #### 1.测试命令
-命令行输入:
-测试文件testfile需要与exe置于同一目录下
+flex和bison编译:
 win_bison --defines=../include/parser.hpp -o parser.cpp yacc.ypp
 win_flex -+ lex.l
-g++ -o parser main.cpp parser.cpp lex.yy.cc AST.cpp
 
 #### 2.g++编译问题记录：
 - 需要手动修改lex.yy.cc中#include <FlexLexer.h> 为 #include "FlexLexer.h"
 - no reference to yylex：g++编译lex文件不直接提供yylex实现体，需要手动修改parser.cpp中的yyparser定义为yyparser(yyFlexLexer* yyflex)，并修改调用yylex函数为yyflex->yylex
+
+#### 3.运行命令
+生成IR:parser <filename>
+将IR转换为bitcode:llvm-as test.ll -o test.bc
+lli读入bitcode运行:lli test.bc
 
 ## 具体实现
 ### 1. 内容列表
@@ -26,12 +29,12 @@ g++ -o parser main.cpp parser.cpp lex.yy.cc AST.cpp
     - [x] 算数表达式
     - [x] 逻辑运算表达式
     - [x] 函数调用
-    - [ ] 循环语句
-    - [ ] 分支语句
-    - [ ] 输入输出 
+    - [x] 循环语句
+    - [x] 分支语句
+    - [x] 输入输出 
     - [x] 类型检查
-    - [ ] 中间代码生成
-    - [ ] 目标代码生成
+    - [x] 中间代码生成
+    - [x] 目标代码生成
 
 ### 2.EBNF定义
 program: global main_block function

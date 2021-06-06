@@ -131,13 +131,20 @@ public:
         return this->dType;
     }
 
+    int getSize(){
+        return this->size;
+    }
+
     llvm::ArrayType* getArrayType(){
         return arrayType;
     }
 
+
     string &getID() {
         return name->getId();
     }
+
+    void GlobalGen();
 
     llvm::Value *CodeGen();
 };
@@ -191,8 +198,18 @@ public:
     }
 
     int getParamType(int index) {
-        VariableDecl* v = static_cast<VariableDecl*>(params[index].get());
-        return v->getVarType();
+        if(params[index]->getDeclType() == DECLVARIABLE){
+            VariableDecl* v = static_cast<VariableDecl*>(params[index].get());
+            return v->getVarType();
+        }
+        else if(params[index]->getDeclType() == DECLARRAY){
+            ArrayDecl* a = static_cast<ArrayDecl*>(params[index].get());
+            if(a->getSize() == -1){
+                return VALUEINTPTR;
+            }
+            else
+                return a->getElementType();
+        }
     }
 
     int getReturnType() {

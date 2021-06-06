@@ -12,9 +12,7 @@ class Identifier;
 
 class ValueExpr;
 
-typedef unique_ptr<ExprList> exprListPtr;
 typedef unique_ptr<Identifier> idPtr;
-typedef unique_ptr<ValueExpr> valuePtr;
 
 class ExprList {
 public:
@@ -115,6 +113,10 @@ public:
         this->value = "";
     }
 
+    string& getValue(){
+        return this->value;
+    }
+
     void Print() {
         cout << value;
     }
@@ -208,6 +210,12 @@ public:
         this->setExprType(EXPRARRAY);
     }
 
+    ArrayExpr(Expr* id){
+        this->id = idPtr(static_cast<Identifier*>(id));
+        this->index = nullptr;
+        this->setExprType(EXPRARRAY);
+    }
+
     string& getId(){
         return id->getId();
     }
@@ -217,8 +225,15 @@ public:
     void Print() {
         id->Print();
         cout<<'['<<endl;
-        index->Print();
+        if(index)
+            index->Print();
         cout << "]";
+    }
+
+    Expr* getIndex(){
+        if(index)
+            return index.get();
+        return nullptr;
     }
 
     llvm::Value* CodeGen();

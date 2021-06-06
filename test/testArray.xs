@@ -1,11 +1,22 @@
+int a[10];
+int test(int i);
 main ()
 {
-    int M[20];
-    M[0] = 5;
-    read(M[1],M[2]);
-    print(M[1]," ",M[2]);
-    string testString;
-    read(testString);
-    print(testString);
+    int i;
+
+    for(i=0;i<10;i=i+1){
+        test(i);
+    }
+
+    for(i=0;i<10;i=i+1){
+        print("%d ",a[i]);
+    }
+
     return;
+}
+
+int test(int i){
+    print("%d ",i);
+    a[i] = i;
+    return 0;
 }

@@ -219,6 +219,7 @@ term: term POW factor {$$ = new BinaryExpr($1,$3,OPPOW); }
 
 left_id: id {$$ = $1;}
         | id LEFTSB expression RIGHTSB {$$ = new ArrayExpr($1,$3);}
+        | id LEFTSB RIGHTSB {$$ = new ArrayExpr($1);}
 
 factor: LEFTP arith_expr RIGHTP {$$ = $2; }
 	| value {$$ = $1;}

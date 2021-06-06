@@ -18,7 +18,6 @@ class WhileLoop;
 class ForLoop;
 class ConditionBlock;
 class Condition;
-class ConditionOtherwise;
 class StmtList;
 
 void printStmt(Stmt *stmt);
@@ -29,15 +28,10 @@ extern void printDecl(Decl *decl);
 
 typedef unique_ptr<Node> nodePtr;
 typedef unique_ptr<Stmt> stmtPtr;
-typedef unique_ptr<StmtList> stmtListPtr;
 typedef unique_ptr<Expr> exprPtr;
 typedef unique_ptr<Decl> declPtr;
 typedef unique_ptr<Assignment> assignPtr;
 typedef unique_ptr<ConditionBlock> condBlockPtr;
-typedef unique_ptr<ForLoop> forLoopPtr;
-typedef unique_ptr<WhileLoop> whileLoopPtr;
-typedef unique_ptr<Condition> conditionPtr;
-typedef unique_ptr<ConditionOtherwise> conditionOtherwisePtr;
 
 class Node {
     int nodeType;

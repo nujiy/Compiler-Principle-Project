@@ -41,6 +41,11 @@
 
 using namespace llvm;
 
+
+static LLVMContext context;
+static IRBuilder<> irBuilder(context);
+static std::unique_ptr<Module> thisModule;
+
 static AllocaInst *createEntryBlockAlloca(Function *function, Value* size ,const std::string &name, Type *type);
 
 static Function *getFunction(std::string name);
@@ -60,28 +65,30 @@ bool CheckCmp(int, int);
 bool CheckLogic(int, int);
 
 class SymbolTable {
-    std::vector<std::map<std::string,AllocaInst*>*> namedValue;   // address map
-    std::vector<std::map<string,Identifier*>*> tables;  // id map
-    std::vector<std::map<string,ArrayDecl*>*> namedArray;
+    std::vector<std::map<string,Identifier*>*> idTable;  //local id map
+    std::map<std::string, Identifier *> globalIdTable;  // global id
+
+    std::vector<std::map<std::string,AllocaInst*>*> namedValue;   // local variable allocation
+    std::map<std::string, GlobalVariable*> globalNamedValue;    //global variable allocation
+
+    std::vector<std::map<string,ArrayDecl*>*> namedArray;   // local array allocation
+    std::map<string,ArrayDecl*> globalNamedArray;   //global array map
+
+    std::map<std::string, protoPtr> protoMap;   // function prototype
+
 public:
     SymbolTable(){}
 
-    AllocaInst* findVar(Expr* id,int size){
-        if(id->getExprType() == EXPRID){
-            return findVar(static_cast<Identifier*>(id)->getId());
-        }
-
-        if(id->getExprType() == EXPRARRAY){
-            return findVar(static_cast<ArrayExpr*>(id)->getId());
-        }
+    void clear(){
+        globalNamedValue.clear();
+        globalIdTable.clear();
     }
 
-    AllocaInst* findVar(string name){
-        for(int i=namedValue.size()-1;i>=0;i--){
-            if(namedValue[i]->find(name) != namedValue[i]->end())
-                return (*namedValue[i])[name];
-        }
-        return nullptr; //can't find
+    bool isGlobal(string& name){
+        if(globalNamedArray.find(name) != globalNamedArray.end())
+            return true;
+
+        return false;
     }
 
     bool judgeSymbolRedefine(string name){
@@ -106,11 +113,73 @@ public:
         return true;
     }
 
-    Identifier* findSymbol(string name){
-        for(int i=tables.size()-1;i>=0;i--){
-            if(tables[i]->find(name) != tables[i]->end())
-                return (*tables[i])[name];
+    Value* findVar(Expr* id){
+
+        if(id->getExprType() == EXPRID){
+            string name = static_cast<Identifier*>(id)->getId();
+            Value* v = findVar(name);
+            if(!v)
+            {
+                return findGlobalVar(name);
+            }
+            return v;
         }
+
+        if(id->getExprType() == EXPRARRAY){
+            ArrayExpr* arrayExpr = static_cast<ArrayExpr*>(id);
+            AllocaInst* startAddr = findVar(arrayExpr->getId());
+
+            Expr* indexExpr = arrayExpr->getIndex();
+
+            if(startAddr){
+                if(!indexExpr)
+                    return startAddr;
+
+                Value* index = arrayExpr->getIndex()->CodeGen();
+                Value* access =  irBuilder.CreateGEP(startAddr,index,"access");
+                return access;
+            }
+            else
+            {
+                GlobalVariable* glbStartAddr = findGlobalVar(arrayExpr->getId());
+                if(!indexExpr)
+                    return glbStartAddr;
+                Value* index = arrayExpr->getIndex()->CodeGen();
+                if(glbStartAddr){
+                    Value* access = irBuilder.CreateGEP(glbStartAddr,index,"access");
+                    return access;
+                }
+            }
+        }
+        return nullptr;
+    }
+
+    AllocaInst* findVar(string name){
+        for(int i=namedValue.size()-1;i>=0;i--){
+            if(namedValue[i]->find(name) != namedValue[i]->end())
+                return (*namedValue[i])[name];
+
+        }
+        return nullptr; //can't find
+    }
+
+    GlobalVariable* findGlobalVar(string name){
+        if(globalNamedValue.find(name) != globalNamedValue.end())
+            return globalNamedValue[name];
+
+        return nullptr;
+    }
+
+    //TODO cpp清理
+    Identifier* findSymbol(string name){
+        for(int i=idTable.size()-1;i>=0;i--){
+            if(idTable[i]->find(name) != idTable[i]->end())
+                return (*idTable[i])[name];
+        }
+
+        if(globalIdTable.find(name)!=globalIdTable.end())
+            return globalIdTable[name];
+
         return nullptr; //can't find
     }
 
@@ -119,6 +188,10 @@ public:
             if(namedArray[i]->find(name) != namedArray[i]->end())
                 return (*namedArray[i])[name];
         }
+
+        if(globalNamedArray.find(name) != globalNamedArray.end())
+            return globalNamedArray[name];
+
         return nullptr;
     }
 
@@ -129,18 +202,29 @@ public:
         (*namedValue.back())[name] = var;
     }
 
-
-    void addSymbol(string name,Identifier* id){
-        if(tables.size() <= 0)
-            pushSymbolTable();
-        (*tables.back())[name] = id;
+    void addGlobalVar(string name,GlobalVariable* glb){
+        globalNamedValue[name] = glb;
     }
 
-    void addArray(string name,ArrayDecl* array){
+    void addLocalSymbol(string name,Identifier* id){
+        if(idTable.size() <= 0)
+            pushSymbolTable();
+        (*idTable.back())[name] = id;
+    }
+
+    void addGlobalSymbol(string name,Identifier* id){
+        globalIdTable[name] = id;
+    }
+
+    void addLocalArray(string name,ArrayDecl* array){
         if(namedArray.size()<=0)
             pushArrayTable();
 
         (*namedArray.back())[name] = array;
+    }
+
+    void addGlobalArray(string name,ArrayDecl* array){
+        globalNamedArray[name] = array;
     }
 
     void pushVarTable(){
@@ -148,7 +232,7 @@ public:
     }
 
     void pushSymbolTable(){
-        tables.push_back(new std::map<string,Identifier*>());
+        idTable.push_back(new std::map<string,Identifier*>());
     }
 
     void pushArrayTable(){
@@ -162,8 +246,8 @@ public:
     }
 
     void popSymbolTable(){
-        if(tables.size()>0)
-            tables.pop_back();
+        if(idTable.size()>0)
+            idTable.pop_back();
     }
 
     void popArrayTable(){

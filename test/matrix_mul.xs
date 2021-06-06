@@ -9,24 +9,26 @@ main ()
     int i;
     int j;
     int k;
-    read(M_A);
-    read(N_A);
+    read("%d",M_A);
+    read("%d",N_A);
     int size_A = M_A * N_A;
     for (i = 0; i < size_A; i = i+1)
     {
-        read(matrix_A[i]);
+        read("%d",matrix_A[i]);
     }
-    read(M_B);
-    read(N_B);
-    int size_B = M_B * N_B;
-    for(i = 0; i< size_B; i = i+1)
-    {
-        read(matrix_B[i]);
-    }
+    read("%d",M_B);
+    read("%d",N_B);
+
     if(N_A <> M_B)
     {
         println("Incompatible Dimensions");
         return;
+    }
+
+    int size_B = M_B * N_B;
+    for(i = 0; i< size_B; i = i+1)
+    {
+        read("%d",matrix_B[i]);
     }
 
     int temp = 0;
@@ -39,7 +41,7 @@ main ()
             {
                 temp = temp + matrix_A[i * N_A + k] * matrix_B[k * N_B + j];
             }
-            print(temp," ");
+            print("%10d ",temp);
         }
         println();
     }
