@@ -393,7 +393,7 @@ Value* ForLoop::CodeGen(){
     localSymbolTable.pushVarTable();
     localSymbolTable.pushSymbolTable();
 
-    irBuilder.CreateCondBr(cond,endBB,loopBodyBB);
+    irBuilder.CreateCondBr(cond,loopBodyBB,endBB);
     irBuilder.SetInsertPoint(loopBodyBB);
 
     for(int i=0,e = stmtlist.size();i<e;i++)
@@ -417,7 +417,7 @@ Value* ForLoop::CodeGen(){
 //    irBuilder.CreateStore(stepValue,alloca);
     stepAssign->CodeGen();
     cond = condition->CodeGen();
-    irBuilder.CreateCondBr(cond, endBB,loopBodyBB);
+    irBuilder.CreateCondBr(cond, loopBodyBB,endBB);
     irBuilder.SetInsertPoint(endBB);
 
     localSymbolTable.popSymbolTable();

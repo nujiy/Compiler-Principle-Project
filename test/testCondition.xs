@@ -1,11 +1,14 @@
 main ()
 {
     int i = 0;
-    if(0>1){
+    if(1>0){
+        if(1>0){
+            print(233);
+        }
         int i = 3;
         print(i);
     }
     else{
-        print(i);
+        print(233);
     }
 }
