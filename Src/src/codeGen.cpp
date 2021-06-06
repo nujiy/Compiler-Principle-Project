@@ -159,19 +159,22 @@ static Value* SysPrint(vector<exprPtr>& params,bool printLine){
 
         if(type == VALUEINT){
             format += "%d";
-            printArgs.emplace_back(params[i]->CodeGen());
         }
         else if(type == VALUEFLOAT){
             format += "%lf";
-            printArgs.emplace_back(params[i]->CodeGen());
         }
         else if(type == VALUESTRING){
             format += "%s";
-            printArgs.emplace_back(params[i]->CodeGen());
         }
         else{
             return IRError("unsupported print type");
         }
+        if(params[i]->getExprType() == EXPRARRAY){
+            Value* tmp = irBuilder.CreateLoad(TypeGen(type),params[i]->CodeGen(),"load_element");
+            printArgs.emplace_back(tmp);
+        }
+        else
+            printArgs.emplace_back(params[i]->CodeGen());
     }
 
     if(printLine){
@@ -681,8 +684,8 @@ Value *String::CodeGen() {
         value = value+end;
 
     Value* mem = irBuilder.CreateGlobalString(value);
-    Value* str = irBuilder.CreateLoad(mem);
-    return str; // return a string start position
+//    Value* str = irBuilder.CreateLoad(mem);
+    return mem; // return a string start position
 }
 
 int ArrayExpr::getDType(){

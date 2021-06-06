@@ -111,6 +111,10 @@ public:
         this->setValueType(VALUESTRING);
     }
 
+    String(){
+        this->value = "";
+    }
+
     void Print() {
         cout << value;
     }

@@ -52,6 +52,9 @@ public:
             case VALUEBOOL:
                 this->value = exprPtr (new Bool(false));
                 break;
+            case VALUESTRING:
+                this->value = exprPtr (new String());
+                break;
             default:
                 this->value =exprPtr (new Integer(0));
         }
@@ -89,37 +92,6 @@ public:
     void GlobalGen();
 
     llvm::Value *CodeGen();
-};
-
-// 参数列表声明 type name (params)
-class ParamsList : public Decl {
-    vector<Decl *> params;
-public:
-    ParamsList() {
-        this->setDeclType(DECLPARAM);
-    }
-
-    ~ParamsList() {}
-
-    ParamsList(vector<Decl *> &params) : params(params) {
-        this->setDeclType(DECLPARAM);
-    }
-
-    void addParam(Decl *param) {
-        this->params.push_back(param);
-    }
-
-    void Print() {
-        for (int i = 0; i < params.size(); i++) {
-            if (i == 0) {
-                params[i]->Print();
-            } else {
-                cout << " ,";
-                params[i]->Print();
-            }
-        }
-        cout << endl;
-    }
 };
 
 class ArrayDecl : public Decl {
