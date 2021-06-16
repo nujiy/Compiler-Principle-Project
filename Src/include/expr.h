@@ -162,6 +162,7 @@ public:
         Identifier *p = static_cast<Identifier *>(funcName);
         this->func = idPtr(p);
         this->setExprType(EXPRFUNCCALL);
+        cout<<"a funcall created"<<endl;
     }
 
     void Print() {

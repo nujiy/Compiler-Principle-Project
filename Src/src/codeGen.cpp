@@ -8,11 +8,13 @@ static SymbolTable symbolTable;
 Type *TypeGen(int type,int size = 0) {
     switch (type) {
         case VALUEINT:
-            return Type::getInt32Ty(context);
+            return Type::getInt16Ty(context);
         case VALUEINTPTR:
-            return Type::getInt32PtrTy(context);
+            return Type::getInt16PtrTy(context);
         case VALUEFLOAT:
             return Type::getFloatTy(context);
+        case VALUEFLOATPTR:
+            return Type::getFloatPtrTy(context);
         case VALUEBOOL:
             return Type::getInt1Ty(context);
         case VALUEVOID:
@@ -20,7 +22,7 @@ Type *TypeGen(int type,int size = 0) {
         case VALUECHAR:
             return Type::getInt8Ty(context);
         default:
-            return Type::getInt32Ty(context);
+            return Type::getInt16Ty(context);
     }
 }
 
@@ -136,7 +138,7 @@ static Value* SysPrint(vector<exprPtr>& params,bool printLine){
     static Function* llvmPrint = nullptr;
     if(llvmPrint == nullptr){
         std::vector<Type*> argTypes = {Type::getInt8PtrTy(context)};
-        FunctionType* funcType = FunctionType::get(Type::getInt32Ty(context), argTypes,true);
+        FunctionType* funcType = FunctionType::get(Type::getInt16Ty(context), argTypes,true);
         Function* func = Function::Create(funcType,Function::ExternalLinkage,"printf",thisModule.get());
         func->setCallingConv(CallingConv::C);
         llvmPrint = func;
@@ -179,13 +181,8 @@ static Value* SysPrint(vector<exprPtr>& params,bool printLine){
         if(type != VALUEINT && type != VALUEINTPTR && type != VALUESTRING && type != VALUEFLOAT){
             return IRError("unsupported print type");
         }
-        if(params[i]->getExprType() == EXPRARRAY){
-            Value* v = params[i]->CodeGen();
-            Value* tmp = irBuilder.CreateLoad(v->getType()->getPointerElementType(),v,"load_element");
-            printArgs.emplace_back(tmp);
-        }
-        else
-            printArgs.emplace_back(params[i]->CodeGen());
+
+        printArgs.emplace_back(params[i]->CodeGen());
     }
 
     return irBuilder.CreateCall(llvmPrint,printArgs,"call_printf");
@@ -195,7 +192,7 @@ static Value* SysRead(vector<exprPtr>& params,bool readLine){
     static Function* llvmRead = nullptr;
     if(llvmRead == nullptr){
         std::vector<Type*> argTypes = {Type::getInt8PtrTy(context)};
-        FunctionType* funcType = FunctionType::get(Type::getInt32Ty(context),argTypes,true);
+        FunctionType* funcType = FunctionType::get(Type::getInt16Ty(context),argTypes,true);
         Function* func = Function::Create(funcType,Function::ExternalLinkage,"scanf",thisModule.get());
 
         func->setCallingConv(CallingConv::C);
@@ -220,6 +217,7 @@ static Value* SysRead(vector<exprPtr>& params,bool readLine){
         }
         else if(params[i]->getExprType() == EXPRARRAY)
         {
+//            string& id = static_cast<ArrayExpr*>(params[i].get())->getId();
             addr = symbolTable.findVar(params[i].get());
         }
         else
@@ -305,7 +303,7 @@ void AST::CodeGen() {
     symbolTable.clear();
 
 
-    auto filename = "test.exe";
+    auto filename = "quick_sort.o";
     std::error_code ec;
     raw_fd_ostream dst(filename, ec, sys::fs::OF_None);
 
@@ -367,6 +365,42 @@ void FuncPart::CodeGen() {
 
 Value *Stmt::CodeGen() {
     return StmtCodeGen(this);
+}
+
+Value* WhileLoop::CodeGen() {
+    Function* atFunc = irBuilder.GetInsertBlock()->getParent();
+
+    BasicBlock* startBB = BasicBlock::Create(context,"init",atFunc);
+    BasicBlock* loopBodyBB = BasicBlock::Create(context,"loop",atFunc);
+    BasicBlock* condBB = BasicBlock::Create(context,"cond",atFunc);
+    BasicBlock* endBB = BasicBlock::Create(context,"endLoop",atFunc);
+    irBuilder.CreateBr(startBB);
+    irBuilder.SetInsertPoint(startBB);
+
+    Value* cond = condition->CodeGen();
+    if(!cond){
+        return IRError("need condition expression in for loop");
+    }
+
+    symbolTable.pushVarTable();
+    symbolTable.pushSymbolTable();
+
+    irBuilder.CreateCondBr(cond,loopBodyBB,endBB);
+    irBuilder.SetInsertPoint(loopBodyBB);
+
+    for(int i=0,e = stmtlist.size();i<e;i++)
+        stmtlist[i]->CodeGen();
+
+    irBuilder.CreateBr(condBB);
+    irBuilder.SetInsertPoint(condBB);
+
+    cond = condition->CodeGen();
+    irBuilder.CreateCondBr(cond, loopBodyBB,endBB);
+    irBuilder.SetInsertPoint(endBB);
+
+    symbolTable.popSymbolTable();
+    symbolTable.popVarTable();
+    return Constant::getNullValue(TypeGen(VALUEINT));
 }
 
 Value* ForLoop::CodeGen(){
@@ -441,7 +475,11 @@ Value* ConditionBlock::CodeGen(){
     if(returnExpr){
         Value* retVal = returnExpr->CodeGen();
         irBuilder.CreateRet(retVal);
-        return retVal;
+
+        Function *atFunc = irBuilder.GetInsertBlock()->getParent();
+        BasicBlock* outBB = BasicBlock::Create(context,"out",atFunc); //atFunc necessary?
+        irBuilder.SetInsertPoint(outBB);
+        //        return retVal;
     }
     symbolTable.popVarTable();
     symbolTable.popSymbolTable();
@@ -469,7 +507,7 @@ Value* Condition::CodeGen() {
 
     block[0]->CodeGen();
 
-    irBuilder.CreateBr(mergeBB);
+    irBuilder.CreateBr(elseBB);
     irBuilder.SetInsertPoint(elseBB);
 
     // else
@@ -496,27 +534,6 @@ Value *Assignment::CodeGen() {
     Value* varAddr = symbolTable.findVar(p);
     Value *init;
 
-//    // a variable or the start address of an array
-//    auto varAddr = symbolTable.findVar(varName);
-//
-//    if (!varAddr) {
-//        //Global array
-//        auto glb = symbolTable.findGlobalVar(varName);
-//        if (! glb) {
-//            IRError("undefined variable");
-//            return nullptr;
-//        } else {
-//            // assign global
-////            GlobalVariable *glb = globalNamedValue[varName];
-//            init = expression->CodeGen();
-//            if (p->getDType() == VALUEFLOAT && expression->getDType() == VALUEINT)
-//                init = irBuilder.CreateUIToFP(init, TypeGen(VALUEFLOAT));
-////            glb->setInitializer(static_cast<Constant *>(init));
-//            irBuilder.CreateStore(init,glb);
-//            return init;
-//        }
-//    }
-
     if (expression) {
         // get value address from expression
         if (!(init = expression->CodeGen())) {
@@ -527,16 +544,6 @@ Value *Assignment::CodeGen() {
         return nullptr;
     }
 
-//    if(identifier->getExprType() == EXPRARRAY){
-//        //array address
-//        Value* alloca = p->CodeGen();  // get element address
-//        irBuilder.CreateStore(init,alloca);
-//    }
-//    else if(identifier->getExprType() == EXPRID){
-//        // assign value
-//        AllocaInst *alloca = varAddr;
-//        irBuilder.CreateStore(init, alloca);
-//    }
     irBuilder.CreateStore(init,varAddr);
     return init;
 }
@@ -546,8 +553,19 @@ Value *Decl::CodeGen() {
 }
 
 void ArrayDecl::setArrayType(){
+//    ArrayType* arrayType = ConstantDataArray::get()
     ArrayType* arrayType = ArrayType::get(TypeGen(dType),this->size);
     this->arrayType = arrayType;
+    switch (dType) {
+        case VALUEINT:
+            this->allocaType = VALUEINTPTR;
+            break;
+        case VALUEFLOAT:
+            this->allocaType = VALUEFLOATPTR;
+            break;
+        default:
+            this->allocaType = VALUEINTPTR;
+    }
 }
 
 void ArrayDecl::GlobalGen(){
@@ -558,8 +576,8 @@ void ArrayDecl::GlobalGen(){
         IRError("redefined global array");
         return;
     }
-
-    GlobalVariable *glbArray = new GlobalVariable(*thisModule.get(),arrayType,false,GlobalValue::CommonLinkage, 0,"global_array");
+    //TODO
+    GlobalVariable *glbArray = new GlobalVariable(*thisModule.get(),arrayType,false,GlobalValue::InternalLinkage, 0,"global_array");
     glbArray->setAlignment(MaybeAlign(4));
 
     // Constant Definitions
@@ -575,7 +593,7 @@ Value* ArrayDecl::CodeGen() {
 
     // if it is real decl not
     Value* sizeValue = ConstantInt::get(TypeGen(VALUEINT),size);
-    AllocaInst* arrAlloca = createEntryBlockAlloca(atFunc,sizeValue,name->getId(), TypeGen(dType));
+    AllocaInst* arrAlloca = createEntryBlockAlloca(atFunc, nullptr,name->getId(), arrayType);
 
     symbolTable.addLocalArray(name->getId(),this);
     symbolTable.addVar(name->getId(),arrAlloca);
@@ -636,10 +654,13 @@ Value *VariableDecl::CodeGen() {
         }
     }
 
-    AllocaInst *alloca = createEntryBlockAlloca(atFunc, nullptr,varName, init->getType());
+    AllocaInst *alloca = createEntryBlockAlloca(atFunc, nullptr,varName, TypeGen(type));
+
+
     irBuilder.CreateStore(init, alloca);
+
     symbolTable.addVar(varName, alloca);
-    return init;
+    return alloca;
 }
 
 Value *ProtoType::CodeGen() {
@@ -688,7 +709,7 @@ Value *Void::CodeGen(){
 }
 
 Value *Integer::CodeGen() {
-    return ConstantInt::get(context, APInt(32,value,true));
+    return ConstantInt::get(context, APInt(16,value,true));
 }
 
 Value *Float::CodeGen() {
@@ -710,7 +731,6 @@ Value *String::CodeGen() {
     // align with zero
     for(int i=0,e=255-length;i<e;i++)
         value = value+end;
-
     Value* mem = irBuilder.CreateGlobalString(value);
 //    Value* str = irBuilder.CreateLoad(mem);
     return mem; // return a string start position
@@ -736,9 +756,9 @@ Value* ArrayExpr::CodeGen() {
     }
 
     Value* access = symbolTable.findVar(this);
-    return access;
+    // 数组元素地址的指针
+     return irBuilder.CreateLoad(access->getType()->getPointerElementType(),access,id->getId().c_str());
     // read value
-    // return irBuilder.CreateLoad(access->getType()->getPointerElementType(),access,id->getId().c_str());
 }
 
 Value *Identifier::CodeGen() {
@@ -755,7 +775,18 @@ Value *Identifier::CodeGen() {
 
     // v is the adddress of this variable
     // begin to generate load ir
-    return irBuilder.CreateLoad(v->getType()->getPointerElementType(), v, identifier.c_str());
+    Value* addr = v;
+    if(symbolTable.isArray(identifier)){
+        if(v->getType()->isArrayTy())
+            addr = irBuilder.CreateBitCast(v,v->getType()->getArrayElementType()->getPointerTo(),"load_ele_addr");
+        else if(v->getType()->isPointerTy() && v->getType()->getPointerElementType()->isArrayTy())
+            addr = irBuilder.CreateBitCast(v,v->getType()->getPointerElementType()->getArrayElementType()->getPointerTo(),"load_ele_addr");
+        else if(v->getType()->isPointerTy())
+            addr = irBuilder.CreateLoad(v->getType()->getPointerElementType(),v,"load_addr");
+    }
+    else
+        addr = irBuilder.CreateLoad(v->getType()->getPointerElementType(), v, identifier.c_str());
+    return addr;
 }
 
 // recursively set expression type
@@ -854,14 +885,6 @@ Value *BinaryExpr::CodeGen() {
 
     Value *L = leftPtr->CodeGen();
     Value *R = rightPtr->CodeGen();
-
-    if(leftPtr->getExprType() == EXPRARRAY) {
-        L = irBuilder.CreateLoad(L->getType()->getPointerElementType(),L,"load element");
-    }
-
-    if (rightPtr->getExprType() == EXPRARRAY) {
-        R = irBuilder.CreateLoad(R->getType()->getPointerElementType(),R,"load element");
-    }
 
     if (!L || !R)
         return nullptr;
@@ -974,8 +997,12 @@ Value *FuncImpl::CodeGen() {
         AllocaInst *alloca = createEntryBlockAlloca(implFunc, nullptr,arg.getName().str(), arg.getType());
 
         irBuilder.CreateStore(&arg, alloca);
-
-        symbolTable.addVar(arg.getName().str(), alloca);
+//        if(arg.getType()->isPointerTy()){
+//            Value* tmp = irBuilder.CreateLoad(alloca->getType()->getPointerElementType(),alloca,"load_element");
+//            symbolTable.addVar(arg.getName().str(), tmp);
+//        }
+//        else
+            symbolTable.addVar(arg.getName().str(), alloca);
         symbolTable.addLocalSymbol(arg.getName().str(),proto->getParamsPtr(id++));
     }
 

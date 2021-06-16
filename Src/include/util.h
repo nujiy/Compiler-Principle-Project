@@ -29,6 +29,7 @@
 #define VALUESTRING 6
 #define VALUEINVALID 9
 #define VALUEINTPTR 10
+#define VALUEFLOATPTR 11
 
 #define EXPRID 0    // determine the expr type variable | literal | binary-expression to be calculate
 #define EXPRVALUE 1

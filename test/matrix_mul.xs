@@ -41,7 +41,7 @@ main ()
             {
                 temp = temp + matrix_A[i * N_A + k] * matrix_B[k * N_B + j];
             }
-            print("%10d ",temp);
+            print("%10d",temp);
         }
         println();
     }

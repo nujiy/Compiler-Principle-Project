@@ -5,13 +5,13 @@ main ()
 
         if(i>3)
         {
-            print(10);
+            print("%d",10);
         }
         else
         {
-            print(-10);
+            print("%d",-10);
         }
 
     }
-    print(1);
+    print("%d",1);
 }

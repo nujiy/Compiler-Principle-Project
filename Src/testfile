@@ -1,8 +1,8 @@
 main ()
 {
-    int M = 2;
-    int N = 1;
-    readln(M);
-    print(M);
+    int N = -8;
+    println("%d",N);
+    read("%d",N);
+    print("%d",N);
     return;
 }

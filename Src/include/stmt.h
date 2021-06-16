@@ -80,7 +80,6 @@ public:
 
     void addStmt(Stmt *stmt) {
         this->stmtList.push_back(stmt);
-        cout<<"add stmt"<<endl;
     }
 };
 
@@ -174,10 +173,10 @@ public:
 
 // while循环
 class WhileLoop:public Stmt{
-    exprPtr expression;
+    exprPtr condition;
     vector<stmtPtr> stmtlist;
 public:
-    WhileLoop(Expr* expression,StmtList* stmtlist):expression(expression){
+    WhileLoop(Expr* expression,StmtList* stmtlist):condition(expression){
         for(int i=0,e=stmtlist->stmtList.size(); i<e;i++){
             this->stmtlist.push_back(stmtPtr(stmtlist->stmtList[i]));
         }
@@ -186,7 +185,7 @@ public:
     }
     void Print(){
         cout << " while (";
-        expression->Print();
+        condition->Print();
         cout << ")" << endl;
         cout << "{";
         for(int i=0,e=stmtlist.size(); i<e;i++){
@@ -194,6 +193,8 @@ public:
         }
         cout << "}" << endl;
     }
+
+    llvm::Value* CodeGen();
 };
 
 // for循环 要求只有一个变量

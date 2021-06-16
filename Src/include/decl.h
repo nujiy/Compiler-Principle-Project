@@ -98,6 +98,7 @@ class ArrayDecl : public Decl {
     idPtr name;
     int size;
     int dType;
+    int allocaType;
     llvm::ArrayType* arrayType;
     vector<ValueExpr> data;
 public:

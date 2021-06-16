@@ -68,7 +68,7 @@ class SymbolTable {
     std::vector<std::map<string,Identifier*>*> idTable;  //local id map
     std::map<std::string, Identifier *> globalIdTable;  // global id
 
-    std::vector<std::map<std::string,AllocaInst*>*> namedValue;   // local variable allocation
+    std::vector<std::map<std::string,Value*>*> namedValue;   // local variable allocation
     std::map<std::string, GlobalVariable*> globalNamedValue;    //global variable allocation
 
     std::vector<std::map<string,ArrayDecl*>*> namedArray;   // local array allocation
@@ -82,6 +82,15 @@ public:
     void clear(){
         globalNamedValue.clear();
         globalIdTable.clear();
+    }
+
+    bool isArray(string& name){
+        for(int i=namedArray.size()-1;i>=0;i--){
+            if(namedArray[i]->find(name) != namedArray[i]->end())
+                return true;
+        }
+
+        return false;
     }
 
     bool isGlobal(string& name){
@@ -127,7 +136,7 @@ public:
 
         if(id->getExprType() == EXPRARRAY){
             ArrayExpr* arrayExpr = static_cast<ArrayExpr*>(id);
-            AllocaInst* startAddr = findVar(arrayExpr->getId());
+            Value* startAddr = findVar(arrayExpr->getId());
 
             Expr* indexExpr = arrayExpr->getIndex();
 
@@ -135,8 +144,16 @@ public:
                 if(!indexExpr)
                     return startAddr;
 
+                Value* arr = startAddr;
+                if(startAddr->getType()->isArrayTy())
+                    arr = irBuilder.CreateBitCast(startAddr,startAddr->getType()->getArrayElementType()->getPointerTo(),"load_ele_addr");
+                else if(startAddr->getType()->isPointerTy() && startAddr->getType()->getPointerElementType()->isArrayTy())
+                    arr = irBuilder.CreateBitCast(startAddr,startAddr->getType()->getPointerElementType()->getArrayElementType()->getPointerTo(),"load_ele_addr");
+                else if(startAddr->getType()->isPointerTy())
+                    arr = irBuilder.CreateLoad(startAddr->getType()->getPointerElementType(),startAddr,"load_addr");
+
                 Value* index = arrayExpr->getIndex()->CodeGen();
-                Value* access =  irBuilder.CreateGEP(startAddr,index,"access");
+                Value* access =  irBuilder.CreateInBoundsGEP(arr,index,"access");
                 return access;
             }
             else
@@ -146,7 +163,12 @@ public:
                     return glbStartAddr;
                 Value* index = arrayExpr->getIndex()->CodeGen();
                 if(glbStartAddr){
-                    Value* access = irBuilder.CreateGEP(glbStartAddr,index,"access");
+//                    Create(Type *PointeeType, Value *Ptr,
+//                           ArrayRef<Value *> IdxList,
+//                    const Twine &NameStr = "",
+//                    Instruction *InsertBefore = nullptr)
+
+                    Value* access = irBuilder.CreateInBoundsGEP(glbStartAddr,index,"gep");
                     return access;
                 }
             }
@@ -154,11 +176,10 @@ public:
         return nullptr;
     }
 
-    AllocaInst* findVar(string name){
+    Value* findVar(string name){
         for(int i=namedValue.size()-1;i>=0;i--){
             if(namedValue[i]->find(name) != namedValue[i]->end())
                 return (*namedValue[i])[name];
-
         }
         return nullptr; //can't find
     }
@@ -170,7 +191,6 @@ public:
         return nullptr;
     }
 
-    //TODO cpp清理
     Identifier* findSymbol(string name){
         for(int i=idTable.size()-1;i>=0;i--){
             if(idTable[i]->find(name) != idTable[i]->end())
@@ -195,7 +215,7 @@ public:
         return nullptr;
     }
 
-    void addVar(string name,AllocaInst* var){
+    void addVar(string name,Value* var){
         if(namedValue.size() <= 0)
             pushVarTable();
 
@@ -228,7 +248,7 @@ public:
     }
 
     void pushVarTable(){
-        namedValue.push_back(new std::map<string,AllocaInst*>());
+        namedValue.push_back(new std::map<string,Value*>());
     }
 
     void pushSymbolTable(){
