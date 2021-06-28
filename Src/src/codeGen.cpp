@@ -8,11 +8,11 @@ static SymbolTable symbolTable;
 Type *TypeGen(int type,int size = 0) {
     switch (type) {
         case VALUEINT:
-            return Type::getInt16Ty(context);
+            return Type::getInt32Ty(context);
         case VALUEINTPTR:
-            return Type::getInt16PtrTy(context);
+            return Type::getInt32PtrTy(context);
         case VALUEFLOAT:
-            return Type::getFloatTy(context);
+            return Type::getDoubleTy(context);
         case VALUEFLOATPTR:
             return Type::getFloatPtrTy(context);
         case VALUEBOOL:
@@ -22,7 +22,7 @@ Type *TypeGen(int type,int size = 0) {
         case VALUECHAR:
             return Type::getInt8Ty(context);
         default:
-            return Type::getInt16Ty(context);
+            return Type::getInt32Ty(context);
     }
 }
 
@@ -35,12 +35,11 @@ bool CheckArith(int l, int r, int *ret) {
 }
 
 bool CheckCmp(int l, int r) {
-    if (!l || !r)
-        return false;
-
     if ((l == VALUEFLOAT || l == VALUEINT) && (r == VALUEFLOAT || r == VALUEINT)) {
         return true;
     }
+    if(l == 0 && r == 0)
+        return true;
     return false;
 }
 
@@ -178,7 +177,7 @@ static Value* SysPrint(vector<exprPtr>& params,bool printLine){
                 type = VALUEINTPTR;
         }
 
-        if(type != VALUEINT && type != VALUEINTPTR && type != VALUESTRING && type != VALUEFLOAT){
+        if(type != VALUEINT && type != VALUEINTPTR && type != VALUESTRING && type != VALUEFLOAT && type!=VALUEBOOL){
             return IRError("unsupported print type");
         }
 
@@ -499,6 +498,7 @@ Value* Condition::CodeGen() {
     BasicBlock* mergeBB = BasicBlock::Create(context,"cont",atFunc);
 
     irBuilder.CreateCondBr(cond,thenBB, elseBB);
+
     irBuilder.SetInsertPoint(thenBB);
 
     if(block.size()<1){
@@ -507,7 +507,9 @@ Value* Condition::CodeGen() {
 
     block[0]->CodeGen();
 
-    irBuilder.CreateBr(elseBB);
+    irBuilder.CreateBr(mergeBB);
+    irBuilder.SetInsertPoint(mergeBB);
+
     irBuilder.SetInsertPoint(elseBB);
 
     // else
@@ -594,7 +596,6 @@ Value* ArrayDecl::CodeGen() {
     // if it is real decl not
     Value* sizeValue = ConstantInt::get(TypeGen(VALUEINT),size);
     AllocaInst* arrAlloca = createEntryBlockAlloca(atFunc, nullptr,name->getId(), arrayType);
-
     symbolTable.addLocalArray(name->getId(),this);
     symbolTable.addVar(name->getId(),arrAlloca);
     return sizeValue;
@@ -612,10 +613,16 @@ void VariableDecl::GlobalGen() {
                                              nullptr, getID());
     glb->setAlignment(MaybeAlign(4));
 
+    if(name->getDType() == VALUEINT){
+        glb->setInitializer(ConstantInt::get(TypeGen(VALUEINT),0,true));
+    }
+    else if(name->getDType() == VALUEFLOAT){
+        glb->setInitializer(ConstantFP::get(TypeGen(VALUEFLOAT),APFloat(0.0)));
+    }
     if (value) {
         Value *init = value->CodeGen();
         if (getVarType() == VALUEFLOAT && value->getDType() == VALUEINT)
-            init = irBuilder.CreateUIToFP(init, TypeGen(VALUEFLOAT));
+            init = irBuilder.CreateSIToFP(init, TypeGen(VALUEFLOAT));
 
         glb->setInitializer(static_cast<Constant *>(init));
     }
@@ -630,16 +637,16 @@ Value *VariableDecl::CodeGen() {
     Function *atFunc = irBuilder.GetInsertBlock()->getParent();
     std::string &varName = name->getId();
     Value *init;
+    int type = name->getDType();
 
     // save id ptr into symbol table
     if (!symbolTable.judgeSymbolRedefine(varName)) {
-        symbolTable.addLocalSymbol(varName, name);
+            symbolTable.addLocalSymbol(varName, name);
     } else {
         IRError("redefined symbol");
         return nullptr;
     }
 
-    int type = name->getDType();
 
     if (!value) {
         switch (type) {
@@ -653,10 +660,25 @@ Value *VariableDecl::CodeGen() {
             return nullptr;
         }
     }
+    if(type == VALUEFLOAT && init->getType()->isIntegerTy()){
+            init = irBuilder.CreateSIToFP(init, TypeGen(VALUEFLOAT));
+    }
+
+    if(type == VALUESTRING){
+        symbolTable.addVar(varName,init);
+        return init;
+    }
 
     AllocaInst *alloca = createEntryBlockAlloca(atFunc, nullptr,varName, TypeGen(type));
 
-
+    if(init->getType() != alloca->getType()->getElementType()){
+        if(value->getDType() ==VALUEFLOAT && name->getDType() == VALUEINT){
+            init = irBuilder.CreateFPToSI(init, TypeGen(VALUEINT));
+        }
+        if(value->getDType() ==VALUEINT && name->getDType() == VALUEFLOAT){
+            init = irBuilder.CreateSIToFP(init, TypeGen(VALUEFLOAT));
+        }
+    }
     irBuilder.CreateStore(init, alloca);
 
     symbolTable.addVar(varName, alloca);
@@ -709,7 +731,7 @@ Value *Void::CodeGen(){
 }
 
 Value *Integer::CodeGen() {
-    return ConstantInt::get(context, APInt(16,value,true));
+    return ConstantInt::get(context, APInt(32,value,true));
 }
 
 Value *Float::CodeGen() {
@@ -776,14 +798,14 @@ Value *Identifier::CodeGen() {
     // v is the adddress of this variable
     // begin to generate load ir
     Value* addr = v;
-    if(symbolTable.isArray(identifier)){
+//    if(symbolTable.isArray(identifier)){
         if(v->getType()->isArrayTy())
             addr = irBuilder.CreateBitCast(v,v->getType()->getArrayElementType()->getPointerTo(),"load_ele_addr");
         else if(v->getType()->isPointerTy() && v->getType()->getPointerElementType()->isArrayTy())
             addr = irBuilder.CreateBitCast(v,v->getType()->getPointerElementType()->getArrayElementType()->getPointerTo(),"load_ele_addr");
         else if(v->getType()->isPointerTy())
             addr = irBuilder.CreateLoad(v->getType()->getPointerElementType(),v,"load_addr");
-    }
+//    }
     else
         addr = irBuilder.CreateLoad(v->getType()->getPointerElementType(), v, identifier.c_str());
     return addr;

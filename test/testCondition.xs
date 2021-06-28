@@ -1,14 +1,15 @@
 main ()
 {
-    int i = 0;
-    if(1>0){
-        if(1>0){
-            print(233);
+    int i = 4;
+    int j = -1;
+    if(i>0){
+        if(j>0){
+            print("%hd",233);
         }
         int i = 3;
-        print(i);
+        print("%hd",i);
     }
     else{
-        print(233);
+        print("%hd",433);
     }
 }

@@ -73,7 +73,8 @@ public:
 class Float : public ValueExpr {
     double value;
 public:
-    Float(double value) : value(value) {
+    Float(double value) {
+        this->value = value;
         this->setValueType(VALUEFLOAT);
     }
 

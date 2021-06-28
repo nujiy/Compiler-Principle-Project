@@ -63,7 +63,7 @@ true {return TRUE;}
 
 -?(0|[1-9][0-9]*) {yylval.valueStr = yytext;return INTEGER_VALUE;}
 
-[0-9]+|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)? {return FLOAT_VALUE;}
+[0-9]+|([0-9]*\.[0-9]+)([eE][-+]?[0-9]+)? {yylval.valueStr = yytext; return FLOAT_VALUE;}
 
 
 

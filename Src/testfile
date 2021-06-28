@@ -1,8 +1,6 @@
 main ()
 {
-    int N = -8;
-    println("%d",N);
-    read("%d",N);
-    print("%d",N);
+    int N = 1--8*2;
+    print("%hd",N);
     return;
 }

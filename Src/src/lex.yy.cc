@@ -927,7 +927,7 @@ YY_RULE_SETUP
 case 44:
 YY_RULE_SETUP
 #line 66 "lex.l"
-{return FLOAT_VALUE;}
+{yylval.valueStr = yytext; return FLOAT_VALUE;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP

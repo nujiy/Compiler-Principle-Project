@@ -1460,7 +1460,7 @@ yyreduce:
 
   case 33: /* value: FLOAT_VALUE  */
 #line 126 "yacc.ypp"
-                      {(yyval.expr) = new Float(atof((yyvsp[0].valueStr)));}
+                      {double num = atof(yyvsp[0].valueStr);printf("%f",num);(yyval.expr) = new Float(num);}
 #line 1465 "parser.cpp"
     break;
 
